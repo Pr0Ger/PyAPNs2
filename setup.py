@@ -4,6 +4,7 @@ setup(
     name='apns2',
     version='0.1.0',
     packages=['apns2'],
+    requires=['hyper'],
     url='',
     license='MIT',
     author='Petrov Sergey',

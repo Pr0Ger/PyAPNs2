@@ -2,11 +2,19 @@
 
 from distutils.core import setup
 
+dependencies = ['hyper']
+
+try:
+    # noinspection PyUnresolvedReferences
+    import enum
+except ImportError:
+    dependencies.append('enum34')
+
 setup(
     name='apns2',
     version='0.1.0',
     packages=['apns2'],
-    requires=['hyper'],
+    requires=dependencies,
     url='https://github.com/Pr0Ger/PyAPNs2',
     license='MIT',
     author='Sergey Petrov',

@@ -1,5 +1,6 @@
 from typing import Optional
 
+from apns2.client import NotificationPriority
 from apns2.payload import Payload
 
 
@@ -10,6 +11,7 @@ class APNsClient(object):
                  use_alternate_port: bool = False) -> None: ...
 
     def send_notification(self,
-             token_hex: str,
-             notification: Payload,
-             topic: Optional[str] = None) -> None: ...
+                          token_hex: str,
+                          notification: Payload,
+                          prioriy: NotificationPriority = NotificationPriority.Immediate,
+                          topic: Optional[str] = None) -> None: ...

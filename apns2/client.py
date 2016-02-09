@@ -1,8 +1,11 @@
 from enum import Enum
 from json import dumps
 
+import json
 from hyper import HTTP20Connection
 from hyper.tls import init_context
+
+from apns2.errors import exception_class_for_reason
 
 
 class NotificationPriority(Enum):
@@ -26,4 +29,9 @@ class APNsClient(object):
             headers['apns-topic'] = topic
 
         url = '/3/device/{}'.format(token_hex)
-        self.__connection.request('POST', url, json_payload, headers)
+        stream_id = self.__connection.request('POST', url, json_payload, headers)
+        resp = self.__connection.get_response(stream_id)
+        if resp.status != 200:
+            raw_data = resp.read().decode('utf-8')
+            data = json.loads(raw_data)
+            raise exception_class_for_reason(data['reason'])

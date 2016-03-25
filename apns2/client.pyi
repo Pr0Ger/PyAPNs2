@@ -13,5 +13,5 @@ class APNsClient(object):
     def send_notification(self,
                           token_hex: str,
                           notification: Payload,
-                          prioriy: NotificationPriority = NotificationPriority.Immediate,
+                          priority: NotificationPriority = NotificationPriority.Immediate,
                           topic: Optional[str] = None) -> None: ...

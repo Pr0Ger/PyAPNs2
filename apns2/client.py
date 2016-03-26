@@ -14,9 +14,9 @@ class NotificationPriority(Enum):
 
 
 class APNsClient(object):
-    def __init__(self, cert_file, use_sandbox=False, use_alternate_port=False):
+    def __init__(self, cert_file, use_sandbox=False, use_alternative_port=False):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
-        port = 2197 if use_alternate_port else 443
+        port = 2197 if use_alternative_port else 443
         ssl_context = init_context()
         ssl_context.load_cert_chain(cert_file)
         self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context)

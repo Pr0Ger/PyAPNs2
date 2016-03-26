@@ -3,12 +3,12 @@ class APNsException(Exception):
 
 
 class InternalException(APNsException):
-    """This exception should not thrown. If it is, please report this bug"""
+    """This exception should not be raised. If it is, please report this as a bug."""
     pass
 
 
 class BadPayloadException(APNsException):
-    """Something bad with payload"""
+    """Something bad with the payload."""
     pass
 
 

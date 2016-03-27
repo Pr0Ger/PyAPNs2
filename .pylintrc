@@ -6,8 +6,4 @@ max-attributes = 10
 max-line-length=120
 
 [MESSAGES CONTROL]
-disable =
-    # Missing docstring
-    C0111,
-    # Too few public methods
-    R0903
+disable = missing-docstring, too-few-public-methods, locally-disabled, invalid-name

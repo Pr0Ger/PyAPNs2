@@ -45,7 +45,7 @@ class PayloadAlert(object):
 
 class Payload(object):
     def __init__(self, alert=None, badge=None, sound=None, content_available=None, category=None, custom=None):
-        super().__init__()
+        super(Payload, self).__init__()
         self.alert = alert
         self.badge = badge
         self.sound = sound

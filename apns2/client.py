@@ -45,7 +45,11 @@ class APNsClient(object):
         topic,
         priority=NotificationPriority.Immediate
     ):
-        json_payload = json.dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        json_payload = json.dumps(
+            notification.dict(),
+            ensure_ascii=False,
+            separators=(',', ':')
+        ).encode('utf-8')
 
         headers = {'apns-topic': topic}
         if priority != DEFAULT_APNS_PRIORITY:

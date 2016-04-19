@@ -71,18 +71,28 @@ class APNsClient(object):
         topic,
         priority=NotificationPriority.Immediate
     ):
+        """
+        Send a notification to a list of tokens in batch. Instead of sending a synchronous request
+        for each token, send multiple requests concurrently. This is done on the same connection,
+        using HTTP/2 streams (one request per stream).
+
+        APNs allows many streams simultaneously, but the number of streams can vary depending on
+        server load. This method reads the SETTINGS frame sent by the server to figure out the
+        maximum number of concurrent streams. Typically, APNs reports a maximum of 500.
+        """
         # Make sure we're connected to APNs, so that we receive and process the server's SETTINGS
         # frame before starting to send notifications.
         self._connection.connect()
         result_counter = collections.Counter()
-        # TODO: Use collections.deque instead of list for faster popping from start.
-        open_streams = []
+        open_streams = collections.deque()
         token_iterator = iter(tokens)
         next_token = next(token_iterator)
         # Loop on the tokens, sending as many requests as possible concurrently to APNs.
         # When reaching the maximum concurrent streams limit, wait for a response before sending
         # another request.
         while open_streams or next_token:
+            # Update the max_concurrent_streams on every iteration since a SETTINGS frame can be
+            # sent by the server at any time.
             self.update_max_concurrent_streams()
             if next_token and len(open_streams) < self._max_concurrent_streams:
                 logger.info("Sending to token %s", next_token)
@@ -100,7 +110,7 @@ class APNsClient(object):
                 # sent new requests or exited the while loop.)
                 assert open_streams
                 # Wait for the first outstanding stream to return a response.
-                stream_id, token = open_streams.pop(0)
+                stream_id, token = open_streams.popleft()
                 result = self.get_notification_result(stream_id)
                 logger.info("Got response for %s: %s", token, result)
                 result_counter[result] += 1

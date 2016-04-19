@@ -7,7 +7,6 @@ class PayloadAlert(object):
                  action_localized_key=None,
                  launch_image=None
                  ):
-        super().__init__()
         self.title = title
         self.title_localized_key = title_localized_key
         self.title_localized_args = title_localized_args
@@ -45,7 +44,6 @@ class PayloadAlert(object):
 
 class Payload(object):
     def __init__(self, alert=None, badge=None, sound=None, content_available=None, category=None, custom=None):
-        super(Payload, self).__init__()
         self.alert = alert
         self.badge = badge
         self.sound = sound

@@ -21,14 +21,13 @@ class APNsClient(object):
         ssl_context.load_cert_chain(cert_file)
         self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context)
 
-    def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None):
+    def send_notification(self, token_hex, notification, topic, priority=NotificationPriority.Immediate):
         json_payload = dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
         headers = {
             'apns-priority': priority.value
+            'apns-topic': topic
         }
-        if topic:
-            headers['apns-topic'] = topic
 
         url = '/3/device/{}'.format(token_hex)
         stream_id = self.__connection.request('POST', url, json_payload, headers)

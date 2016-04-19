@@ -9,9 +9,10 @@ from apns2.errors import exception_class_for_reason
 
 
 class NotificationPriority(Enum):
-    Immediate = 10
-    Delayed = 5
+    Immediate = '10'
+    Delayed = '5'
 
+DEFAULT_APNS_PRIORITY = NotificationPriority.Immediate
 
 class APNsClient(object):
     def __init__(self, cert_file, use_sandbox=False, use_alternative_port=False):
@@ -24,10 +25,9 @@ class APNsClient(object):
     def send_notification(self, token_hex, notification, topic, priority=NotificationPriority.Immediate):
         json_payload = dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
-        headers = {
-            'apns-priority': priority.value
-            'apns-topic': topic
-        }
+        headers = {'apns-topic': topic}
+        if priority != DEFAULT_APNS_PRIORITY:
+            header['apns-priority'] = priority.value
 
         url = '/3/device/{}'.format(token_hex)
         stream_id = self.__connection.request('POST', url, json_payload, headers)

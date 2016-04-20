@@ -25,6 +25,7 @@ class APNsClient(object):
         ssl_context.load_cert_chain(cert_file)
         self._connection = HTTP20Connection(server, port, ssl_context=ssl_context)
         self._max_concurrent_streams = None
+        self._previous_server_max_concurrent_streams = None
 
     def send_notification(
         self,
@@ -124,9 +125,11 @@ class APNsClient(object):
     def update_max_concurrent_streams(self):
         # Get the max_concurrent_streams setting returned by the server.
         max_concurrent_streams = self._connection.remote_settings.max_concurrent_streams
-        if max_concurrent_streams == self._max_concurrent_streams:
+        if max_concurrent_streams == self._previous_server_max_concurrent_streams:
+            # The server hasn't issued an updated SETTINGS frame.
             return
-
+        
+        self._previous_server_max_concurrent_streams = max_concurrent_streams
         # Handle and log unexpected values sent by APNs, just in case.
         if max_concurrent_streams > CONCURRENT_STREAMS_SAFETY_MAXIMUM:
             logger.warning(

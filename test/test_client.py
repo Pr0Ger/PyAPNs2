@@ -1,10 +1,8 @@
 from collections import Counter
-from mock import Mock, patch
 from unittest import TestCase
 import logging
 
-import hyper
-import hyper.tls
+from mock import Mock, patch
 
 from apns2.client import APNsClient, CONCURRENT_STREAMS_SAFETY_MAXIMUM
 from apns2.payload import Payload
@@ -21,6 +19,7 @@ class ClientTestCase(TestCase):
     def setUp(self):
         self.open_streams = 0
         self.max_open_streams = 0
+        self.mock_results = None
         
         with patch("apns2.client.HTTP20Connection") as mock_connection_constructor, \
             patch("apns2.client.init_context"):
@@ -33,7 +32,13 @@ class ClientTestCase(TestCase):
             
     def mock_get_response(self, *dummy_args):
         self.open_streams -= 1
-        return Mock(status=200)
+        if self.mock_results:
+            reason = self.mock_results[self.mock_connection.get_response.call_count - 1]
+            response = Mock(status=200 if reason == "Success" else 400)
+            response.read.return_value = '{"reason": "%s"}' % reason
+            return response
+        else:
+            return Mock(status=200)
     
     def mock_request(self, *dummy_args):
         self.open_streams += 1
@@ -57,3 +62,16 @@ class ClientTestCase(TestCase):
         self.mock_connection.remote_settings.max_concurrent_streams = 0
         self.client.send_notification_batch(self.tokens, self.notification, self.topic)
         self.assertEqual(self.max_open_streams, 1)
+
+    def test_send_notification_batch_reports_different_results(self):
+        self.mock_results = (
+            ["BadDeviceToken"] * 1000 + ["Success"] * 1000 + ["DeviceTokenNotForTopic"] * 2000 +
+            ["Success"] * 1000 + ["BadDeviceToken"] * 500 + ["PayloadTooLarge"] * 4500
+        )
+        results = self.client.send_notification_batch(self.tokens, self.notification, self.topic)
+        self.assertEqual(results, Counter({
+            "BadDeviceToken": 1500,
+            "Success": 2000,
+            "DeviceTokenNotForTopic": 2000,
+            "PayloadTooLarge": 4500
+        }))

@@ -76,7 +76,7 @@ class APNsClient(object):
         topic,
         priority=NotificationPriority.Immediate
     ):
-        """
+        '''
         Send a notification to a list of tokens in batch. Instead of sending a synchronous request
         for each token, send multiple requests concurrently. This is done on the same connection,
         using HTTP/2 streams (one request per stream).
@@ -84,7 +84,7 @@ class APNsClient(object):
         APNs allows many streams simultaneously, but the number of streams can vary depending on
         server load. This method reads the SETTINGS frame sent by the server to figure out the
         maximum number of concurrent streams. Typically, APNs reports a maximum of 500.
-        """
+        '''
         # Make sure we're connected to APNs, so that we receive and process the server's SETTINGS
         # frame before starting to send notifications.
         self._connection.connect()
@@ -100,7 +100,7 @@ class APNsClient(object):
             # sent by the server at any time.
             self.update_max_concurrent_streams()
             if next_token and len(open_streams) < self._max_concurrent_streams:
-                logger.info("Sending to token %s", next_token)
+                logger.info('Sending to token %s', next_token)
                 stream_id = self.send_notification_async(next_token, notification, topic, priority)
                 open_streams.append((stream_id, next_token))
 
@@ -108,7 +108,7 @@ class APNsClient(object):
                     next_token = next(token_iterator)
                 except StopIteration:
                     # No tokens remaining. Proceed to get results for pending requests.
-                    logger.info("Finished sending all tokens, waiting for pending requests.")
+                    logger.info('Finished sending all tokens, waiting for pending requests.')
                     next_token = None
             else:
                 # We have at least one request waiting for response (otherwise we would have either
@@ -117,7 +117,7 @@ class APNsClient(object):
                 # Wait for the first outstanding stream to return a response.
                 stream_id, token = open_streams.popleft()
                 result = self.get_notification_result(stream_id)
-                logger.info("Got response for %s: %s", token, result)
+                logger.info('Got response for %s: %s', token, result)
                 result_counter[result] += 1
 
         return result_counter
@@ -133,17 +133,17 @@ class APNsClient(object):
         # Handle and log unexpected values sent by APNs, just in case.
         if max_concurrent_streams > CONCURRENT_STREAMS_SAFETY_MAXIMUM:
             logger.warning(
-                "APNs max_concurrent_streams too high (%s), resorting to default maximum (%s)",
+                'APNs max_concurrent_streams too high (%s), resorting to default maximum (%s)',
                 max_concurrent_streams,
                 CONCURRENT_STREAMS_SAFETY_MAXIMUM
             )
             self._max_concurrent_streams = CONCURRENT_STREAMS_SAFETY_MAXIMUM
         elif max_concurrent_streams < 1:
             logger.warning(
-                "APNs reported max_concurrent_streams less than 1 (%s), using value of 1",
+                'APNs reported max_concurrent_streams less than 1 (%s), using value of 1',
                 max_concurrent_streams
             )
             self._max_concurrent_streams = 1
         else:
-            logger.info("APNs set max_concurrent_streams to %s", max_concurrent_streams)
+            logger.info('APNs set max_concurrent_streams to %s', max_concurrent_streams)
             self._max_concurrent_streams = max_concurrent_streams

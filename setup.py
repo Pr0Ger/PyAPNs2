@@ -2,9 +2,7 @@
 
 from distutils.core import setup
 
-dependencies = [
-    'git+git://github.com/Lukasa/hyper.git@065b53904bb46e9a6a06b5061c3ff1ef4b4c00aa#egg=hyper'
-]
+dependencies = ['hyper']
 
 try:
     # noinspection PyUnresolvedReferences

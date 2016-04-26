@@ -75,3 +75,7 @@ class ClientTestCase(TestCase):
             "DeviceTokenNotForTopic": 2000,
             "PayloadTooLarge": 4500
         }))
+
+    def test_send_empty_batch_does_nothing(self):
+        self.client.send_notification_batch([], self.notification, self.topic)
+        self.assertEqual(self.mock_connection.request.call_count, 0)

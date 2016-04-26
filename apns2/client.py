@@ -100,7 +100,7 @@ class APNsClient(object):
         # Loop on the tokens, sending as many requests as possible concurrently to APNs.
         # When reaching the maximum concurrent streams limit, wait for a response before sending
         # another request.
-        while open_streams or next_token:
+        while len(open_streams) > 0 or next_token is not None:
             # Update the max_concurrent_streams on every iteration since a SETTINGS frame can be
             # sent by the server at any time.
             self.update_max_concurrent_streams()
@@ -118,7 +118,7 @@ class APNsClient(object):
             else:
                 # We have at least one request waiting for response (otherwise we would have either
                 # sent new requests or exited the while loop.)
-                assert open_streams
+                assert len(open_streams) > 0
                 # Wait for the first outstanding stream to return a response.
                 stream_id, token = open_streams.popleft()
                 result = self.get_notification_result(stream_id)

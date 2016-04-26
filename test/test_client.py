@@ -15,7 +15,6 @@ class ClientTestCase(TestCase):
         cls.notification = Payload(alert="Hello, world!")
         cls.topic = "com.example.App"
 
-    
     def setUp(self):
         self.open_streams = 0
         self.max_open_streams = 0

@@ -12,6 +12,8 @@ class NotificationPriority(Enum):
     Immediate = '10'
     Delayed = '5'
 
+RequestStream = collections.namedtuple("RequestStream", ["stream_id", "token"])
+
 DEFAULT_APNS_PRIORITY = NotificationPriority.Immediate
 CONCURRENT_STREAMS_SAFETY_MAXIMUM = 1000
 
@@ -107,7 +109,7 @@ class APNsClient(object):
             if next_token and len(open_streams) < self._max_concurrent_streams:
                 logger.info('Sending to token %s', next_token)
                 stream_id = self.send_notification_async(next_token, notification, topic, priority)
-                open_streams.append((stream_id, next_token))
+                open_streams.append(RequestStream(stream_id, next_token))
 
                 try:
                     next_token = next(token_iterator)
@@ -120,9 +122,9 @@ class APNsClient(object):
                 # sent new requests or exited the while loop.)
                 assert len(open_streams) > 0
                 # Wait for the first outstanding stream to return a response.
-                stream_id, token = open_streams.popleft()
-                result = self.get_notification_result(stream_id)
-                logger.info('Got response for %s: %s', token, result)
+                pending_stream = open_streams.popleft()
+                result = self.get_notification_result(pending_stream.stream_id)
+                logger.info('Got response for %s: %s', pending_stream.token, result)
                 result_counter[result] += 1
 
         return result_counter

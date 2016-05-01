@@ -20,6 +20,7 @@ class ClientTestCase(TestCase):
         self.open_streams = 0
         self.max_open_streams = 0
         self.mock_results = None
+        self.next_stream_id = 0
         
         with patch("apns2.client.HTTP20Connection") as mock_connection_constructor, \
             patch("apns2.client.init_context"):
@@ -30,10 +31,10 @@ class ClientTestCase(TestCase):
             mock_connection_constructor.return_value = self.mock_connection
             self.client = APNsClient(cert_file=None)
             
-    def mock_get_response(self, *dummy_args):
+    def mock_get_response(self, stream_id):
         self.open_streams -= 1
         if self.mock_results:
-            reason = self.mock_results[self.mock_connection.get_response.call_count - 1]
+            reason = self.mock_results[stream_id]
             response = Mock(status=200 if reason == "Success" else 400)
             response.read.return_value = '{"reason": "%s"}' % reason
             return response
@@ -44,6 +45,9 @@ class ClientTestCase(TestCase):
         self.open_streams += 1
         if self.open_streams > self.max_open_streams:
             self.max_open_streams = self.open_streams
+        stream_id = self.next_stream_id
+        self.next_stream_id += 1
+        return stream_id
         
     def test_send_notification_batch_returns_results_in_order(self):
         results = self.client.send_notification_batch(self.tokens, self.notification, self.topic)

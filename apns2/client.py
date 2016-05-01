@@ -87,6 +87,10 @@ class APNsClient(object):
         APNs allows many streams simultaneously, but the number of streams can vary depending on
         server load. This method reads the SETTINGS frame sent by the server to figure out the
         maximum number of concurrent streams. Typically, APNs reports a maximum of 500.
+        
+        The function returns a dictionary mapping each token to its result. The result is "Success"
+        if the token was sent successfully, or the string returned by APNs in the 'reason' field of
+        the response, if the token generated an error.
         '''
         token_iterator = iter(tokens)
         try:
@@ -99,7 +103,7 @@ class APNsClient(object):
         # frame before starting to send notifications.
         self.connect()
             
-        result_counter = collections.Counter()
+        results = {}
         open_streams = collections.deque()
         # Loop on the tokens, sending as many requests as possible concurrently to APNs.
         # When reaching the maximum concurrent streams limit, wait for a response before sending
@@ -127,9 +131,9 @@ class APNsClient(object):
                 pending_stream = open_streams.popleft()
                 result = self.get_notification_result(pending_stream.stream_id)
                 logger.info('Got response for %s: %s', pending_stream.token, result)
-                result_counter[result] += 1
+                results[pending_stream.token] = result
 
-        return result_counter
+        return results
 
     def update_max_concurrent_streams(self):
         # Get the max_concurrent_streams setting returned by the server.

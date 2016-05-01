@@ -1,4 +1,3 @@
-from collections import Counter
 from unittest import TestCase
 import logging
 
@@ -46,9 +45,10 @@ class ClientTestCase(TestCase):
         if self.open_streams > self.max_open_streams:
             self.max_open_streams = self.open_streams
         
-    def test_send_notification_batch(self):
+    def test_send_notification_batch_returns_results_in_order(self):
         results = self.client.send_notification_batch(self.tokens, self.notification, self.topic)
-        self.assertEqual(results, Counter({"Success": 10000}))
+        expected_results = {token: "Success" for token in self.tokens}
+        self.assertEqual(results, expected_results)
 
     def test_send_notification_batch_respects_max_concurrent_streams_from_server(self):
         self.client.send_notification_batch(self.tokens, self.notification, self.topic)
@@ -70,12 +70,8 @@ class ClientTestCase(TestCase):
             ["Success"] * 1000 + ["BadDeviceToken"] * 500 + ["PayloadTooLarge"] * 4500
         )
         results = self.client.send_notification_batch(self.tokens, self.notification, self.topic)
-        self.assertEqual(results, Counter({
-            "BadDeviceToken": 1500,
-            "Success": 2000,
-            "DeviceTokenNotForTopic": 2000,
-            "PayloadTooLarge": 4500
-        }))
+        expected_results = dict(zip(self.tokens, self.mock_results))
+        self.assertEqual(results, expected_results)
 
     def test_send_empty_batch_does_nothing(self):
         self.client.send_notification_batch([], self.notification, self.topic)

@@ -5,12 +5,14 @@ import logging
 from mock import Mock, patch
 
 from apns2.client import APNsClient, CONCURRENT_STREAMS_SAFETY_MAXIMUM
+from apns2.errors import ConnectionError
 from apns2.payload import Payload
 
 class ClientTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
-        logging.basicConfig()
+        # Ignore all log messages so that test output is not cluttered.
+        logging.basicConfig(level=logging.CRITICAL)
         cls.tokens = ["%064x" % i for i in range(10000)]
         cls.notification = Payload(alert="Hello, world!")
         cls.topic = "com.example.App"
@@ -78,3 +80,19 @@ class ClientTestCase(TestCase):
     def test_send_empty_batch_does_nothing(self):
         self.client.send_notification_batch([], self.notification, self.topic)
         self.assertEqual(self.mock_connection.request.call_count, 0)
+
+    def test_connect_establishes_connection(self):
+        self.client.connect()
+        self.mock_connection.connect.assert_called_once_with()
+        
+    def test_connect_retries_failed_connection(self):
+        self.mock_connection.connect.side_effect = [RuntimeError, RuntimeError, None]
+        self.client.connect()
+        self.assertEqual(self.mock_connection.connect.call_count, 3)
+    
+    def test_connect_stops_on_reaching_max_retries(self):
+        self.mock_connection.connect.side_effect = [RuntimeError] * 4
+        with self.assertRaises(ConnectionError):
+            self.client.connect()
+        self.assertEqual(self.mock_connection.connect.call_count, 3)
+    

@@ -6,7 +6,7 @@ from enum import Enum
 from hyper import HTTP20Connection
 from hyper.tls import init_context
 
-from .errors import exception_class_for_reason
+from .errors import ConnectionError, exception_class_for_reason
 
 class NotificationPriority(Enum):
     Immediate = '10'
@@ -16,6 +16,7 @@ RequestStream = collections.namedtuple("RequestStream", ["stream_id", "token"])
 
 DEFAULT_APNS_PRIORITY = NotificationPriority.Immediate
 CONCURRENT_STREAMS_SAFETY_MAXIMUM = 1000
+MAX_CONNECTION_RETRIES = 3
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,8 @@ class APNsClient(object):
 
         # Make sure we're connected to APNs, so that we receive and process the server's SETTINGS
         # frame before starting to send notifications.
-        self._connection.connect()
+        self.connect()
+            
         result_counter = collections.Counter()
         open_streams = collections.deque()
         # Loop on the tokens, sending as many requests as possible concurrently to APNs.
@@ -154,3 +156,24 @@ class APNsClient(object):
         else:
             logger.info('APNs set max_concurrent_streams to %s', max_concurrent_streams)
             self._max_concurrent_streams = max_concurrent_streams
+
+    def connect(self):
+        '''
+        Establish a connection to APNs. If already connected, the function does nothing. If the
+        connection fails, the function retries up to MAX_CONNECTION_RETRIES times.
+        '''
+        retries = 0
+        while retries < MAX_CONNECTION_RETRIES:
+            try:
+                self._connection.connect()
+                logger.info('Connected to APNs')
+                return
+            except Exception:
+                retries += 1
+                logger.exception(
+                    'Failed connecting to APNs (attempt %s of %s)',
+                    retries,
+                    MAX_CONNECTION_RETRIES
+                )
+        
+        raise ConnectionError()

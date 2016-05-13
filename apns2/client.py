@@ -9,8 +9,8 @@ from apns2.errors import exception_class_for_reason
 
 
 class NotificationPriority(Enum):
-    Immediate = 10
-    Delayed = 5
+    Immediate = '10'
+    Delayed = '5'
 
 
 class APNsClient(object):

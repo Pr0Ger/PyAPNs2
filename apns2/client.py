@@ -21,7 +21,7 @@ class APNsClient(object):
         ssl_context.load_cert_chain(cert_file)
         self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto or 'h2')
 
-    def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None):
+    def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None, expiration=None):
         json_payload = dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
         headers = {
@@ -29,6 +29,9 @@ class APNsClient(object):
         }
         if topic:
             headers['apns-topic'] = topic
+
+        if expiration is not None:
+            headers['apns-expiration'] = "%d" % expiration
 
         url = '/3/device/{}'.format(token_hex)
         stream_id = self.__connection.request('POST', url, json_payload, headers)

@@ -14,4 +14,5 @@ class APNsClient(object):
                           token_hex: str,
                           notification: Payload,
                           priority: NotificationPriority = NotificationPriority.Immediate,
-                          topic: Optional[str] = None) -> None: ...
+                          topic: Optional[str] = None,
+                          expiration: Optional[int] = None) -> None: ...

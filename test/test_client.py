@@ -45,6 +45,7 @@ class ClientTestCase(TestCase):
         self.open_streams += 1
         if self.open_streams > self.max_open_streams:
             self.max_open_streams = self.open_streams
+        
         stream_id = self.next_stream_id
         self.next_stream_id += 1
         return stream_id
@@ -94,5 +95,6 @@ class ClientTestCase(TestCase):
         self.mock_connection.connect.side_effect = [RuntimeError] * 4
         with self.assertRaises(ConnectionError):
             self.client.connect()
+        
         self.assertEqual(self.mock_connection.connect.call_count, 3)
     

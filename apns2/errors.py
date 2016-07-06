@@ -129,6 +129,11 @@ class MissingTopic(BadPayloadException):
     pass
 
 
+
+class ConnectionError(APNsException):
+    """There was an error connecting to APNs."""
+
+
 def exception_class_for_reason(reason):
     return {
         'PayloadEmpty': PayloadEmpty,

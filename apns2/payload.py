@@ -56,7 +56,7 @@ class Payload(object):
             'aps': {}
         }
         if self.alert:
-            if self.alert is PayloadAlert:
+            if isinstance(self.alert, PayloadAlert):
                 result['aps']['alert'] = self.alert.dict()
             else:
                 result['aps']['alert'] = self.alert

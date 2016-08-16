@@ -137,7 +137,12 @@ class APNsClient(object):
 
     def update_max_concurrent_streams(self):
         # Get the max_concurrent_streams setting returned by the server.
-        max_concurrent_streams = self._connection.remote_settings.max_concurrent_streams
+        # The max_concurrent_streams value is saved in the H2Connection instance that must be
+        # accessed using a with statement in order to acquire a lock.
+        # pylint: disable=protected-access
+        with self._connection._conn as connection:
+            max_concurrent_streams = connection.remote_settings.max_concurrent_streams
+
         if max_concurrent_streams == self._previous_server_max_concurrent_streams:
             # The server hasn't issued an updated SETTINGS frame.
             return

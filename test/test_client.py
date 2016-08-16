@@ -1,7 +1,7 @@
 from unittest import TestCase
 import logging
 
-from mock import Mock, patch
+from mock import MagicMock, Mock, patch
 
 from apns2.client import APNsClient, CONCURRENT_STREAMS_SAFETY_MAXIMUM
 from apns2.errors import ConnectionError
@@ -24,10 +24,11 @@ class ClientTestCase(TestCase):
         
         with patch("apns2.client.HTTP20Connection") as mock_connection_constructor, \
             patch("apns2.client.init_context"):
-            self.mock_connection = Mock()
+            self.mock_connection = MagicMock()
             self.mock_connection.get_response.side_effect = self.mock_get_response
             self.mock_connection.request.side_effect = self.mock_request
-            self.mock_connection.remote_settings.max_concurrent_streams = 500
+            self.mock_connection._conn.__enter__.return_value = self.mock_connection._conn
+            self.mock_connection._conn.remote_settings.max_concurrent_streams = 500
             mock_connection_constructor.return_value = self.mock_connection
             self.client = APNsClient(cert_file=None)
             
@@ -60,12 +61,12 @@ class ClientTestCase(TestCase):
         self.assertEqual(self.max_open_streams, 500)
 
     def test_send_notification_batch_overrides_server_max_concurrent_streams_if_too_large(self):
-        self.mock_connection.remote_settings.max_concurrent_streams = 5000
+        self.mock_connection._conn.remote_settings.max_concurrent_streams = 5000
         self.client.send_notification_batch(self.tokens, self.notification, self.topic)
         self.assertEqual(self.max_open_streams, CONCURRENT_STREAMS_SAFETY_MAXIMUM)
         
     def test_send_notification_batch_overrides_server_max_concurrent_streams_if_too_small(self):
-        self.mock_connection.remote_settings.max_concurrent_streams = 0
+        self.mock_connection._conn.remote_settings.max_concurrent_streams = 0
         self.client.send_notification_batch(self.tokens, self.notification, self.topic)
         self.assertEqual(self.max_open_streams, 1)
 

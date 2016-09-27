@@ -11,6 +11,7 @@ NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 
 class APNsClient(object):
+    auth_type = None
     def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, proto=None, http_client_key=None):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
         port = 2197 if use_alternative_port else 443
@@ -20,6 +21,7 @@ class APNsClient(object):
         # authenticate with individual certificates for every app
         if cert_file and key_file:
             cert_options = dict(validate_cert=True, client_cert=cert_file, client_key=key_file)
+            self.auth_type = 'cert'
         # auth with universal JWT token
         elif team and key_id and key_file:
             self._team = team
@@ -30,6 +32,7 @@ class APNsClient(object):
             self._key_id = key_id
             self._auth_token = self.get_auth_token()
             self._header_format = 'bearer %s'
+            self.auth_type = 'token'
 
 
         self.__http_client = SimpleAsyncHTTP2Client(
@@ -46,9 +49,10 @@ class APNsClient(object):
         self.cert_file = cert_file
 
     def __repr__(self):
-        if self.cert_file:
+        uid = None
+        if self.auth_type == 'cert':
             uid = self.cert_file
-        elif self._key_id:
+        elif self.auth_type == 'token':
             uid = self._key_id
         return "APNSClient: {}".format(uid)
 

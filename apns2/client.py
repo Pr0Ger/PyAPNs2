@@ -16,6 +16,7 @@ class APNsClient(object):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
         port = 2197 if use_alternative_port else 443
         self._auth_token = None
+        self.auth_token_expired = False
         cert_options = None
 
         # authenticate with individual certificates for every app
@@ -57,12 +58,13 @@ class APNsClient(object):
         return "APNSClient: {}".format(uid)
 
     def get_auth_token(self):
-        if not self._auth_token:
+        if not self._auth_token or self.auth_token_expired:
             claim = dict(
                 iss=self._team,
                 iat=int(time.time())  #  @TODO regenerate it from time to time (interval???)
             )
             self._auth_token = jwt.encode(claim, self._auth_key, algorithm='ES256', headers={'kid': self._key_id})
+            self.auth_token_expired = False
         return self._auth_token
 
     @gen.coroutine
@@ -77,8 +79,8 @@ class APNsClient(object):
         if expiration is not None:
             headers['apns-expiration'] = "%d" % expiration
 
-        if self._auth_token:
-            headers['Authorization'] = self._header_format % self._auth_token.decode('ascii')
+        if self.auth_type == 'token':
+            headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
         
         futures = []
 

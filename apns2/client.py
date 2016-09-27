@@ -1,23 +1,65 @@
 from json import dumps
+import time
+from functools import partial
 
 from tornado import gen
 from http2 import SimpleAsyncHTTP2Client
-from functools import partial
+import jwt
+
 
 NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 
 class APNsClient(object):
-    def __init__(self, cert_file, key_file, use_sandbox=False, use_alternative_port=False, proto=None, http_client_key=None):
+    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, proto=None, http_client_key=None):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
         port = 2197 if use_alternative_port else 443
-        cert_options = dict(validate_cert=True, client_cert=cert_file, client_key=key_file)
-        self.__http_client = SimpleAsyncHTTP2Client(host=server, port=port, secure=True, cert_options=cert_options, enable_push=True, connect_timeout=2, max_streams=20, http_client_key=http_client_key)
+        self._auth_token = None
+        cert_options = None
+
+        # authenticate with individual certificates for every app
+        if cert_file and key_file:
+            cert_options = dict(validate_cert=True, client_cert=cert_file, client_key=key_file)
+        # auth with universal JWT token
+        elif team and key_id and key_file:
+            self._team = team
+
+            with open(key_file, 'r') as tmp:
+                self._auth_key = tmp.read()
+
+            self._key_id = key_id
+            self._auth_token = self.get_auth_token()
+            self._header_format = 'bearer %s'
+
+
+        self.__http_client = SimpleAsyncHTTP2Client(
+            host=server,
+            port=port,
+            secure=True,
+            cert_options=cert_options,
+            enable_push=False,
+            connect_timeout=2,
+            max_streams=20,
+            http_client_key=http_client_key
+        )
         self.__url_pattern = '/3/device/{token}'
         self.cert_file = cert_file
 
     def __repr__(self):
-        return "APNSClient: {}".format(self.cert_file)
+        if self.cert_file:
+            uid = self.cert_file
+        elif self._key_id:
+            uid = self._key_id
+        return "APNSClient: {}".format(uid)
+
+    def get_auth_token(self):
+        if not self._auth_token:
+            claim = dict(
+                iss=self._team,
+                iat=int(time.time())  #  @TODO regenerate it from time to time (interval???)
+            )
+            self._auth_token = jwt.encode(claim, self._auth_key, algorithm='ES256', headers={'kid': self._key_id})
+        return self._auth_token
 
     @gen.coroutine
     def send_notifications(self, tokens, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, cb=None):
@@ -30,6 +72,9 @@ class APNsClient(object):
 
         if expiration is not None:
             headers['apns-expiration'] = "%d" % expiration
+
+        if self._auth_token:
+            headers['Authorization'] = self._header_format % self._auth_token.decode('ascii')
         
         futures = []
 
@@ -39,9 +84,7 @@ class APNsClient(object):
                 callback = partial(cb, token=token)
             else:
                 callback = None
-            print('Headers: %s' % headers)
-            print('Payload: %s' % json_payload)
-            print('Url: %s' % url)
+
             future = self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=callback, raise_error=False)
             futures.append(future)
 

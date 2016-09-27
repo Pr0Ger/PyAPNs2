@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-dependencies = ['hyper']
+dependencies = ['hyper', 'jwt']
 
 try:
     # noinspection PyUnresolvedReferences
@@ -12,16 +12,17 @@ except ImportError:
 
 setup(
     name='apns2',
-    version='0.1.1',
+    version='0.1.3',
     packages=['apns2'],
     install_requires=dependencies,
-    url='https://github.com/Pr0Ger/PyAPNs2',
+    url='https://github.com/anscii/PyAPNs2',
     license='MIT',
-    author='Sergey Petrov',
-    author_email='me@pr0ger.prg',
+    author='Natalya Akentyeva',
+    author_email='nt.aknt@gmail.com',
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',

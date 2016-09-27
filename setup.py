@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-dependencies = ['hyper', 'jwt']
+dependencies = ['hyper', 'PyJWT']
 
 try:
     # noinspection PyUnresolvedReferences

@@ -1,6 +1,5 @@
 from json import dumps
 import time
-from functools import partial
 
 from tornado import gen
 from http2 import SimpleAsyncHTTP2Client
@@ -86,12 +85,7 @@ class APNsClient(object):
 
         for token in tokens:
             url = self.__url_pattern.format(token=token)
-            if cb:
-                callback = partial(cb, token=token)
-            else:
-                callback = None
-
-            future = self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=callback, raise_error=False)
+            future = self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
             futures.append(future)
 
         yield futures

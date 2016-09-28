@@ -42,7 +42,7 @@ class APNsClient(object):
             cert_options=cert_options,
             enable_push=False,
             connect_timeout=connect_timeout,
-            max_streams=20,
+            max_streams=50,
             http_client_key=http_client_key
         )
         self.__url_pattern = '/3/device/{token}'

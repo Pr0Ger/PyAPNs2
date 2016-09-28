@@ -11,7 +11,7 @@ NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 class APNsClient(object):
     auth_type = None
-    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, proto=None, http_client_key=None):
+    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, proto=None, http_client_key=None, connect_timeout=2):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
         port = 2197 if use_alternative_port else 443
         self._auth_token = None
@@ -41,7 +41,7 @@ class APNsClient(object):
             secure=True,
             cert_options=cert_options,
             enable_push=False,
-            connect_timeout=2,
+            connect_timeout=connect_timeout,
             max_streams=20,
             http_client_key=http_client_key
         )

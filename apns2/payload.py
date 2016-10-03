@@ -60,7 +60,7 @@ class Payload(object):
                 result['aps']['alert'] = self.alert.dict()
             else:
                 result['aps']['alert'] = self.alert
-        if self.badge:
+        if self.badge is not None:
             result['aps']['badge'] = self.badge
         if self.sound:
             result['aps']['sound'] = self.sound

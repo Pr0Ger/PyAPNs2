@@ -78,13 +78,15 @@ class APNsClient(object):
         if expiration is not None:
             headers['apns-expiration'] = "%d" % expiration
 
-        if self.auth_type == 'token':
-            headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
-        
+      
         futures = []
 
         for token in tokens:
             url = self.__url_pattern.format(token=token)
+
+            if self.auth_type == 'token':
+                headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
+
             future = self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
             futures.append(future)
 

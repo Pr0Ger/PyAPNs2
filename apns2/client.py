@@ -4,7 +4,9 @@ import time
 from tornado import gen
 from http2 import SimpleAsyncHTTP2Client
 import jwt
+import logging
 
+log = logging.getLogger('apns2.client')
 
 NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
@@ -60,8 +62,9 @@ class APNsClient(object):
         if not self._auth_token or self.auth_token_expired:
             claim = dict(
                 iss=self._team,
-                iat=int(time.time())  #  @TODO regenerate it from time to time (interval???)
+                iat=int(time.time())
             )
+            log.info('JWT claim: %s', claim)
             self._auth_token = jwt.encode(claim, self._auth_key, algorithm='ES256', headers={'kid': self._key_id})
             self.auth_token_expired = False
         return self._auth_token
@@ -77,7 +80,6 @@ class APNsClient(object):
 
         if expiration is not None:
             headers['apns-expiration'] = "%d" % expiration
-
       
         futures = []
 

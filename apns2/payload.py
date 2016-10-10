@@ -43,13 +43,15 @@ class PayloadAlert(object):
 
 
 class Payload(object):
-    def __init__(self, alert=None, badge=None, sound=None, content_available=None, category=None, custom=None):
+    def __init__(self, alert=None, badge=None, sound=None, content_available=None,
+                 mutable_content=False, category=None, custom=None):
         self.alert = alert
         self.badge = badge
         self.sound = sound
         self.content_available = content_available
         self.category = category
         self.custom = custom
+        self.mutable_content = mutable_content
 
     def dict(self):
         result = {
@@ -66,6 +68,8 @@ class Payload(object):
             result['aps']['sound'] = self.sound
         if self.content_available:
             result['aps']['content-available'] = 1
+        if self.mutable_content:
+            result['aps']['mutable-content'] = 1
         if self.category:
             result['aps']['category'] = self.category
         if self.custom:

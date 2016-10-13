@@ -43,8 +43,9 @@ class PayloadAlert(object):
 
 
 class Payload(object):
-    def __init__(self, alert=None, badge=None, sound=None, content_available=False,
-                 mutable_content=False, category=None, custom=None):
+    def __init__(self, alert=None, badge=None, sound=None,
+                 content_available=False, mutable_content=False,
+                 category=None, custom=None):
         self.alert = alert
         self.badge = badge
         self.sound = sound

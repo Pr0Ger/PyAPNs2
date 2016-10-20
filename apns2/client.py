@@ -14,15 +14,16 @@ class NotificationPriority(Enum):
 
 
 class APNsClient(object):
-    def __init__(self, cert_file, use_sandbox=False, use_alternative_port=False, proto=None):
+    def __init__(self, cert_file, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
         port = 2197 if use_alternative_port else 443
         ssl_context = init_context()
         ssl_context.load_cert_chain(cert_file)
         self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto or 'h2')
+        self.__json_encoder = json_encoder
 
     def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None, expiration=None):
-        json_payload = dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        json_payload = dumps(notification.dict(), cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
         headers = {
             'apns-priority': priority.value

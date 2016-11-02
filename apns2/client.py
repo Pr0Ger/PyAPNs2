@@ -45,6 +45,7 @@ class APNsClient(object):
             enable_push=False,
             connect_timeout=connect_timeout,
             max_streams=100,
+            initial_window_size=655350,
             http_client_key=http_client_key
         )
         self.__url_pattern = '/3/device/{token}'
@@ -64,7 +65,6 @@ class APNsClient(object):
                 iss=self._team,
                 iat=int(time.time())
             )
-            log.info('JWT claim: %s', claim)
             self._auth_token = jwt.encode(claim, self._auth_key, algorithm='ES256', headers={'kid': self._key_id})
             self.auth_token_expired = False
         return self._auth_token

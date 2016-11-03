@@ -43,11 +43,12 @@ class PayloadAlert(object):
 
 
 class Payload(object):
-    def __init__(self, alert=None, badge=None, sound=None, content_available=None, category=None, custom=None):
+    def __init__(self, alert=None, badge=None, sound=None, content_available=None, mutable_content=False, category=None, custom=None):
         self.alert = alert
         self.badge = badge
         self.sound = sound
         self.content_available = content_available
+        self.mutable_content = mutable_content
         self.category = category
         self.custom = custom
 
@@ -55,20 +56,22 @@ class Payload(object):
         result = {
             'aps': {}
         }
-        if self.alert:
+        if self.alert is not None:
             if isinstance(self.alert, PayloadAlert):
                 result['aps']['alert'] = self.alert.dict()
             else:
                 result['aps']['alert'] = self.alert
         if self.badge is not None:
             result['aps']['badge'] = self.badge
-        if self.sound:
+        if self.sound is not None:
             result['aps']['sound'] = self.sound
         if self.content_available:
             result['aps']['content-available'] = 1
-        if self.category:
+        if self.mutable_content:
+            result['aps']['mutable-content'] = 1
+        if self.category is not None:
             result['aps']['category'] = self.category
-        if self.custom:
+        if self.custom is not None:
             result.update(self.custom)
 
         return result

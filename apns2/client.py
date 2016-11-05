@@ -93,3 +93,31 @@ class APNsClient(object):
             futures.append(future)
 
         yield futures
+
+    @gen.coroutine
+    def send_notification(self, token, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, cb=None):
+        json_payload = dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        headers = {
+            'apns-priority': priority
+        }
+        if topic:
+            headers['apns-topic'] = topic
+
+        if expiration is not None:
+            headers['apns-expiration'] = "%d" % expiration
+      
+        futures = []
+
+        url = self.__url_pattern.format(token=token)
+
+        if self.auth_type == 'token':
+            headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
+
+        try:
+            yield self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+        except Exception as err:
+            log.warn(err)
+            yield self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+
+
+

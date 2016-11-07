@@ -52,6 +52,9 @@ class Payload(object):
         self.category = category
         self.custom = custom
 
+    def __repr__(self):
+        return repr(self.dict()).decode("unicode-escape")
+
     def dict(self):
         result = {
             'aps': {}

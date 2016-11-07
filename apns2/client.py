@@ -19,7 +19,7 @@ class APNsClient(object):
         self._auth_token = None
         self.auth_token_expired = False
         cert_options = None
-        self.json_payload=None
+        self.json_payload = None
         self.headers = None
 
         # authenticate with individual certificates for every app
@@ -115,14 +115,14 @@ class APNsClient(object):
         return headers
 
     def prepare_request(self, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None):
-        self.json_payload = self.prepare_payload(notification)
-        self.headers = self.prepare_headers(priority, topic, expiration)
-        return True
+        json_payload = self.prepare_payload(notification)
+        headers = self.prepare_headers(priority, topic, expiration)
+        return dict(json_payload=json_payload, headers=headers)
 
     @gen.coroutine
-    def send(self, token, cb=None):
+    def send(self, token, json_payload, headers, cb=None):
         url = self.__url_pattern.format(token=token)
-        yield self.__http_client.fetch(url, method='POST', body=self.json_payload, headers=self.headers, callback=cb, raise_error=False)
+        yield self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
 
 
     @gen.coroutine

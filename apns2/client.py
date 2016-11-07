@@ -19,6 +19,8 @@ class APNsClient(object):
         self._auth_token = None
         self.auth_token_expired = False
         cert_options = None
+        self.json_payload=None
+        self.headers = None
 
         # authenticate with individual certificates for every app
         if cert_file and key_file:
@@ -35,7 +37,6 @@ class APNsClient(object):
             self._auth_token = self.get_auth_token()
             self._header_format = 'bearer %s'
             self.auth_type = 'token'
-
 
         self.__http_client = SimpleAsyncHTTP2Client(
             host=server,
@@ -94,30 +95,42 @@ class APNsClient(object):
 
         yield futures
 
-    @gen.coroutine
-    def send_notification(self, token, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, cb=None):
-        json_payload = dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    def prepare_payload(self, notification):
+        return dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+
+    def prepare_headers(self, priority, topic, expiration):
         headers = {
             'apns-priority': priority
         }
+
         if topic:
             headers['apns-topic'] = topic
 
         if expiration is not None:
             headers['apns-expiration'] = "%d" % expiration
-      
-        futures = []
-
-        url = self.__url_pattern.format(token=token)
 
         if self.auth_type == 'token':
             headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
 
-        try:
-            yield self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
-        except Exception as err:
-            log.warn(err)
-            yield self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+        return headers
+
+    def prepare_request(self, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None):
+        self.json_payload = self.prepare_payload(notification)
+        self.headers = self.prepare_headers(priority, topic, expiration)
+        return True
+
+    @gen.coroutine
+    def send(self, token, cb=None):
+        url = self.__url_pattern.format(token=token)
+        yield self.__http_client.fetch(url, method='POST', body=self.json_payload, headers=self.headers, callback=cb, raise_error=False)
 
 
+    @gen.coroutine
+    def send_notification(self, token, notification=None, payload=None, headers=None, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, cb=None):
+        if payload is None and notification:
+            self.json_payload = self.prepare_payload(notification)
 
+        if headers is None:
+            self.headers = self.prepare_headers(priority, topic, expiration)
+
+        yield self.send(token, cb)

@@ -1,10 +1,11 @@
 from json import dumps
 import time
+import itertools
+import logging
 
 from tornado import gen
 from http2 import SimpleAsyncHTTP2Client
 import jwt
-import logging
 
 log = logging.getLogger('apns2.client')
 
@@ -13,7 +14,7 @@ NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 class APNsClient(object):
     auth_type = None
-    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, proto=None, http_client_key=None, connect_timeout=2):
+    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, proto=None, http_client_key=None, connect_timeout=2, pool_size=5):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
         port = 2197 if use_alternative_port else 443
         self._auth_token = None
@@ -38,7 +39,22 @@ class APNsClient(object):
             self._header_format = 'bearer %s'
             self.auth_type = 'token'
 
-        self.__http_client = SimpleAsyncHTTP2Client(
+        self.__url_pattern = '/3/device/{token}'
+        self.cert_file = cert_file
+
+        self.pool = []
+
+        pool_size = min(1, pool_size)
+
+        for ind in xrange(pool_size):
+            ind_http_client_key = "{}{}".format(http_client_key, ind)
+            self.pool.append(self._init_client(server, port, cert_options, connect_timeout, ind_http_client_key))
+
+        self.conn_pool = itertools.cycle(self.pool)
+
+
+    def _init_client(self, server, port, cert_options, connect_timeout, http_client_key):
+        return SimpleAsyncHTTP2Client(
             host=server,
             port=port,
             secure=True,
@@ -49,8 +65,6 @@ class APNsClient(object):
             initial_window_size=655350,
             http_client_key=http_client_key
         )
-        self.__url_pattern = '/3/device/{token}'
-        self.cert_file = cert_file
 
     def __repr__(self):
         uid = None
@@ -90,7 +104,7 @@ class APNsClient(object):
             if self.auth_type == 'token':
                 headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
 
-            future = self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+            future = self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
             futures.append(future)
 
         yield futures
@@ -122,7 +136,7 @@ class APNsClient(object):
     @gen.coroutine
     def send(self, token, json_payload, headers, cb=None):
         url = self.__url_pattern.format(token=token)
-        yield self.__http_client.fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+        yield self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
 
 
     @gen.coroutine

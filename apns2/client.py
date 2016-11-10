@@ -44,6 +44,9 @@ class APNsClient(object):
 
         self.pool = []
 
+        if use_sandbox:
+            pool_size = 1
+
         pool_size = min(1, pool_size)
 
         for ind in xrange(pool_size):

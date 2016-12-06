@@ -29,4 +29,4 @@ PyAPNs2 is distributed under the terms of the MIT license.
 
 See [LICENSE](LICENSE) file for the complete license details.
 
-[a1]:https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/Introduction.html
+[a1]:https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/

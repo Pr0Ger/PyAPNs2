@@ -79,9 +79,14 @@ class APNsClient(object):
 
     def get_auth_token(self):
         if not self._auth_token or self.auth_token_expired:
+            if isinstance(self.auth_token_expired, int):
+                exp_time = self.auth_token_expired
+            else:
+                exp_time = int(time.time())
+
             claim = dict(
                 iss=self._team,
-                iat=int(time.time())
+                iat=exp_time
             )
             self._auth_token = jwt.encode(claim, self._auth_key, algorithm='ES256', headers={'kid': self._key_id})
             self.auth_token_expired = False

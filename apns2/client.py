@@ -14,7 +14,7 @@ NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 class APNsClient(object):
     auth_type = None
-    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, proto=None, http_client_key=None, connect_timeout=2, pool_size=5):
+    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, http_client_key=None, connect_timeout=20, request_timeout=20, pool_size=5):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
         port = 2197 if use_alternative_port else 443
         self._auth_token = None
@@ -51,12 +51,12 @@ class APNsClient(object):
 
         for ind in xrange(pool_size):
             ind_http_client_key = "{}{}".format(http_client_key, ind)
-            self.pool.append(self._init_client(server, port, cert_options, connect_timeout, ind_http_client_key))
+            self.pool.append(self._init_client(server, port, cert_options, connect_timeout, request_timeout, ind_http_client_key))
 
         self.conn_pool = itertools.cycle(self.pool)
 
 
-    def _init_client(self, server, port, cert_options, connect_timeout, http_client_key):
+    def _init_client(self, server, port, cert_options, connect_timeout, request_timeout, http_client_key):
         return SimpleAsyncHTTP2Client(
             host=server,
             port=port,
@@ -64,6 +64,7 @@ class APNsClient(object):
             cert_options=cert_options,
             enable_push=False,
             connect_timeout=connect_timeout,
+            request_timeout=request_timeout,
             max_streams=100,
             initial_window_size=655350,
             http_client_key=http_client_key

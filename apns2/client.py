@@ -13,6 +13,7 @@ class NotificationPriority(Enum):
     Delayed = '5'
 
 RequestStream = collections.namedtuple("RequestStream", ["stream_id", "token"])
+Notification = collections.namedtuple("Notification", ["token", "payload"])
 
 DEFAULT_APNS_PRIORITY = NotificationPriority.Immediate
 CONCURRENT_STREAMS_SAFETY_MAXIMUM = 1000
@@ -74,8 +75,7 @@ class APNsClient(object):
 
     def send_notification_batch(
         self,
-        tokens,
-        notification,
+        notifications,
         topic,
         priority=NotificationPriority.Immediate
     ):
@@ -92,9 +92,9 @@ class APNsClient(object):
         if the token was sent successfully, or the string returned by APNs in the 'reason' field of
         the response, if the token generated an error.
         '''
-        token_iterator = iter(tokens)
+        notification_iterator = iter(notifications)
         try:
-            next_token = next(token_iterator)
+            next_notification = next(notification_iterator)
         except StopIteration:
             # Iterator is empty. Nothing to do.
             return
@@ -108,21 +108,26 @@ class APNsClient(object):
         # Loop on the tokens, sending as many requests as possible concurrently to APNs.
         # When reaching the maximum concurrent streams limit, wait for a response before sending
         # another request.
-        while len(open_streams) > 0 or next_token is not None:
+        while len(open_streams) > 0 or next_notification is not None:
             # Update the max_concurrent_streams on every iteration since a SETTINGS frame can be
             # sent by the server at any time.
             self.update_max_concurrent_streams()
-            if next_token and len(open_streams) < self._max_concurrent_streams:
-                logger.info('Sending to token %s', next_token)
-                stream_id = self.send_notification_async(next_token, notification, topic, priority)
-                open_streams.append(RequestStream(stream_id, next_token))
+            if next_notification and len(open_streams) < self._max_concurrent_streams:
+                logger.info('Sending to token %s', next_notification)
+                stream_id = self.send_notification_async(
+                    next_notification.token,
+                    next_notification.payload,
+                    topic,
+                    priority
+                )
+                open_streams.append(RequestStream(stream_id, next_notification.token))
 
                 try:
-                    next_token = next(token_iterator)
+                    next_notification = next(notification_iterator)
                 except StopIteration:
                     # No tokens remaining. Proceed to get results for pending requests.
                     logger.info('Finished sending all tokens, waiting for pending requests.')
-                    next_token = None
+                    next_notification = None
             else:
                 # We have at least one request waiting for response (otherwise we would have either
                 # sent new requests or exited the while loop.)

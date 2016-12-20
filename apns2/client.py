@@ -37,7 +37,8 @@ class APNsClient(object):
         url = '/3/device/{}'.format(token_hex)
         stream_id = self.__connection.request('POST', url, json_payload, headers)
         resp = self.__connection.get_response(stream_id)
-        if resp.status != 200:
-            raw_data = resp.read().decode('utf-8')
-            data = json.loads(raw_data)
-            raise exception_class_for_reason(data['reason'])
+        with resp:
+            if resp.status != 200:
+                raw_data = resp.read().decode('utf-8')
+                data = json.loads(raw_data)
+                raise exception_class_for_reason(data['reason'])

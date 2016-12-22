@@ -132,8 +132,14 @@ class APNsClient(object):
         return dict(json_payload=json_payload, headers=headers)
 
     @gen.coroutine
-    def send(self, token, json_payload, headers, cb=None):
+    def send(self, token, json_payload=None, headers=None, cb=None):
         url = self.__url_pattern.format(token=token)
+
+        if not json_payload:
+            json_payload = self.json_payload
+        if not headers:
+            headers = self.headers
+
         yield self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
 
 
@@ -145,4 +151,4 @@ class APNsClient(object):
         if headers is None:
             self.headers = self.prepare_headers(priority, topic, expiration)
 
-        yield self.send(token, cb)
+        yield self.send(token=token, cb=cb)

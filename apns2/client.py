@@ -70,6 +70,6 @@ class APNsClient(object):
 
             self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto)
 
-        url = '/3/device/{}'.format(token_hex)
-        stream_id = self.__connection.request('POST', url, json_payload, headers)
+        url = '/3/device/{}'.format(token)
+        stream_id = self.__connection.request('POST', url, payload, headers)
         return self.__connection.get_response(stream_id)

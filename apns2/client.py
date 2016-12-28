@@ -22,11 +22,22 @@ class NotificationPriority(Enum):
 
 class APNsClient(object):
 
-    def __init__(self,
-                 cert_file,
-                 use_sandbox=False,
-                 use_alternative_port=False,
-                 proto=None,
+    @staticmethod
+    def get_headers(priority, topic, expiration):
+        headers = {
+            'apns-priority': priority.value
+        }
+
+        if topic:
+            headers['apns-topic'] = topic
+
+        if expiration is not None:
+            headers['apns-expiration'] = "%d" % expiration
+
+        return headers
+
+    def __init__(self, cert_file, use_sandbox=False,
+                 use_alternative_port=False, proto=None,
                  json_encoder=None
                  ):
 
@@ -41,12 +52,9 @@ class APNsClient(object):
             'proto': proto or 'h2'
         }
 
-    def send_notification(self,
-                          token_hex,
-                          notification,
+    def send_notification(self, token, notification,
                           priority=NotificationPriority.Immediate,
-                          topic=None,
-                          expiration=None
+                          topic=None, expiration=None
                           ):
 
         payload = notification
@@ -62,20 +70,6 @@ class APNsClient(object):
             if resp.status != 200:
                 data = loads(raw_data)
                 raise exception_class_for_reason(data['reason'])
-
-    @staticmethod
-    def get_headers(priority, topic, expiration):
-        headers = {
-            'apns-priority': priority.value
-        }
-
-        if topic:
-            headers['apns-topic'] = topic
-
-        if expiration is not None:
-            headers['apns-expiration'] = "%d" % expiration
-
-        return headers
 
     def __send_request(self, token, payload, headers):
         if not self.__connection:  # Lazy Connecting

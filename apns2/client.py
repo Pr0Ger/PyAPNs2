@@ -19,18 +19,6 @@ class NotificationPriority(Enum):
     Immediate = '10'
     Delayed = '5'
 
-def get_headers(priority, topic=None, expiration=None):
-    headers = {
-        'apns-priority': priority.value
-    }
-
-    if topic != None:
-        headers['apns-topic'] = topic
-
-    if expiration != None:
-        headers['apns-expiration'] = "%d" % expiration
-
-    return headers
 
 class APNsClient(object):
 
@@ -61,6 +49,20 @@ class APNsClient(object):
             if resp.status != 200:
                 data = loads(raw_data)
                 raise exception_class_for_reason(data['reason'])
+
+    @staticmethod
+    def get_headers(priority, topic=None, expiration=None):
+        headers = {
+            'apns-priority': priority.value
+        }
+
+        if topic != None:
+            headers['apns-topic'] = topic
+
+        if expiration != None:
+            headers['apns-expiration'] = "%d" % expiration
+        
+        return headers
 
     def __send_request(self, token, payload, headers):
         if not self.__connection:  # Lazy Connecting

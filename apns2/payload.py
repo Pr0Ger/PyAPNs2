@@ -1,6 +1,10 @@
 MAX_PAYLOAD_SIZE = 4096
 
 
+def remove_empty_keys(d):
+    return {key: d[key] for key in d if d[key]}
+
+
 class PayloadAlert(object):
     def __init__(self, title=None, title_localized_key=None,
                  title_localized_args=None, body=None,
@@ -22,8 +26,7 @@ class PayloadAlert(object):
         }
 
     def dict(self):
-        # Remove keys without value
-        return {k: self.__result[k] for k in self.__result if self.__result[k]}
+        return remove_empty_keys(self.__result)
 
 
 class Payload(object):
@@ -43,12 +46,11 @@ class Payload(object):
         self.custom = custom
 
     def dict(self):
-        # Remove keys without value
-        aps = {k: self.__aps[k] for k in self.__aps if self.__aps[k]}
+        aps = remove_empty_keys(self.__aps)
         result = {
             'aps': aps
         }
-        
+
         if self.custom is not None:
             result.update(self.custom)
 

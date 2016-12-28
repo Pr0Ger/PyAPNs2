@@ -22,37 +22,33 @@ class NotificationPriority(Enum):
 
 class APNsClient(object):
 
-    @staticmethod
-    def fill_init_args(args):
-        if 'use_sandbox' not in args:
-            args['use_sandbox'] = False
+    def __init__(self,
+                 cert_file,
+                 use_sandbox=False,
+                 use_alternative_port=False,
+                 proto=None,
+                 json_encoder=None
+                 ):
 
-        if 'use_alternative_port' not in args:
-            args['use_alternative_port'] = False
-
-        if 'proto' not in args:
-            args['proto'] = None
-
-        if 'json_encoder' not in args:
-            args['json_encoder'] = None
-
-        return args
-
-    def __init__(self, cert_file, **kargs):
-        args = fill_init_args(kargs)
-        
-        self.__encoder = args['json_encoder']
+        self.__encoder = json_encoder
         self.__connection = None
         self.__connection_parameters = {
-            'server': SANDBOX_ADDR if args['use_sandbox'] else SERVER_ADDR,
-            'port': ALTERNATIVE_PORT if args['use_alternative_port'] else PORT,
+            'server': SANDBOX_ADDR if use_sandbox else SERVER_ADDR,
+            'port': ALTERNATIVE_PORT if use_alternative_port else PORT,
             'ssl_context': {
                 'cert_file': cert_file
             },
-            'proto': args['proto'] or 'h2'
+            'proto': proto or 'h2'
         }
 
-    def send_notification(self, token_hex, notification, **kargs):
+    def send_notification(self,
+                          token_hex,
+                          notification,
+                          priority=NotificationPriority.Immediate,
+                          topic=None,
+                          expiration=None
+                          ):
+    
         payload = notification
         if isinstance(notification, Payload):
             payload = notification.dict()

@@ -65,19 +65,15 @@ class APNsClient(object):
 
     @staticmethod
     def get_headers(priority, topic, expiration):
-        priority = NotificationPriority.Immediate
-        if 'priority' in kargs:
-            kargs['priority'] = kargs['priority']
-
         headers = {
             'apns-priority': priority.value
         }
 
-        if 'topic' in kargs:
-            headers['apns-topic'] = kargs['topic']
+        if topic:
+            headers['apns-topic'] = topic
 
-        if 'expiration' in kargs:
-            headers['apns-expiration'] = "%d" % kargs['expiration']
+        if expiration is not None:
+            headers['apns-expiration'] = "%d" % expiration
 
         return headers
 

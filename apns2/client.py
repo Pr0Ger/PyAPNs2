@@ -19,6 +19,18 @@ class NotificationPriority(Enum):
     Immediate = '10'
     Delayed = '5'
 
+def get_headers(priority, topic=None, expiration=None):
+    headers = {
+        'apns-priority': priority.value
+    }
+
+    if topic != None:
+        headers['apns-topic'] = topic
+
+    if expiration != None:
+        headers['apns-expiration'] = "%d" % expiration
+
+    return headers
 
 class APNsClient(object):
 
@@ -41,15 +53,7 @@ class APNsClient(object):
             payload = notification.dict()
 
         json_payload = dumps(payload, cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
-
-        headers = {
-            'apns-priority': priority.value
-        }
-        if topic:
-            headers['apns-topic'] = topic
-
-        if expiration:
-            headers['apns-expiration'] = "%d" % expiration
+        headers = get_headers(priority, topic, expiration)
 
         with self.__send_request(token_hex, json_payload, headers) as resp:
             raw_data = resp.read().decode('utf-8')

@@ -15,26 +15,26 @@ PORT = 443
 ALTERNATIVE_PORT = 2197
 
 
+def get_headers(priority, topic, expiration):
+    headers = {
+        'apns-priority': priority.value
+    }
+
+    if topic:
+        headers['apns-topic'] = topic
+
+    if expiration is not None:
+        headers['apns-expiration'] = "%d" % expiration
+
+    return headers
+
+
 class NotificationPriority(Enum):
     Immediate = '10'
     Delayed = '5'
 
 
 class APNsClient(object):
-
-    @staticmethod
-    def get_headers(priority, topic, expiration):
-        headers = {
-            'apns-priority': priority.value
-        }
-
-        if topic:
-            headers['apns-topic'] = topic
-
-        if expiration is not None:
-            headers['apns-expiration'] = "%d" % expiration
-
-        return headers
 
     def __init__(self, cert_file, use_sandbox=False,
                  use_alternative_port=False, proto=None,

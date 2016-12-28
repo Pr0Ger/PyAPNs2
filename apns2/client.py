@@ -9,7 +9,7 @@ from apns2.payload import Payload
 
 # const
 SERVER_ADDR = 'api.push.apple.com'
-SERVER_ADDR_SANDBOX = 'api.development.push.apple.com'
+SANDBOX_ADDR = 'api.development.push.apple.com'
 
 PORT = 443
 ALTERNATIVE_PORT = 2197
@@ -22,31 +22,34 @@ class NotificationPriority(Enum):
 
 class APNsClient(object):
 
+    @staticmethod
+    def fill_init_args(args):
+        if 'use_sandbox' not in args:
+            args['use_sandbox'] = False
+
+        if 'use_alternative_port' not in args:
+            args['use_alternative_port'] = False
+
+        if 'proto' not in args:
+            args['proto'] = None
+
+        if 'json_encoder' not in args:
+            args['json_encoder'] = None
+
+        return args
+
     def __init__(self, cert_file, **kargs):
-        self.__encoder = None
-        if 'json_encoder' in kargs:
-            self.__encoder = kargs['json_encoder']
-
-        addr = SERVER_ADDR
-        if 'use_sandbox' in kargs and kargs['use_sandbox']:
-            addr = SERVER_ADDR_SANDBOX
-
-        port = PORT
-        if 'use_alternative_port' in kargs and kargs['use_alternative_port']:
-            port = ALTERNATIVE_PORT
-
-        proto = 'h2'
-        if 'proto' in kargs:
-            proto = kargs['proto'] or 'h2'
-
+        args = fill_init_args(kargs)
+        
+        self.__encoder = args['json_encoder']
         self.__connection = None
         self.__connection_parameters = {
-            'server': addr,
-            'port': port,
+            'server': SANDBOX_ADDR if args['use_sandbox'] else SERVER_ADDR,
+            'port': ALTERNATIVE_PORT if args['use_alternative_port'] else PORT,
             'ssl_context': {
                 'cert_file': cert_file
             },
-            'proto': proto
+            'proto': args['proto'] or 'h2'
         }
 
     def send_notification(self, token_hex, notification, **kargs):

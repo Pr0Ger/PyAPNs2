@@ -37,8 +37,8 @@ class APNsClient(object):
 
     def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None, expiration=None):
         payload = notification
-        if isinstance(notification, Payload): 
-            payload = notification.dict() 
+        if isinstance(notification, Payload):
+            payload = notification.dict()
 
         json_payload = dumps(payload, cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 

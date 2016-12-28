@@ -48,13 +48,13 @@ class APNsClient(object):
                           topic=None,
                           expiration=None
                           ):
-    
+
         payload = notification
         if isinstance(notification, Payload):
             payload = notification.dict()
 
         json = dumps(payload, cls=self.__encoder, ensure_ascii=False, separators=(',', ':'))
-        headers = get_headers(**kargs)
+        headers = get_headers(priority, topic, expiration)
 
         with self.__send_request(token, json.encode('utf-8'), headers) as resp:
             raw_data = resp.read().decode('utf-8')
@@ -64,7 +64,7 @@ class APNsClient(object):
                 raise exception_class_for_reason(data['reason'])
 
     @staticmethod
-    def get_headers(**kargs):
+    def get_headers(priority, topic, expiration):
         priority = NotificationPriority.Immediate
         if 'priority' in kargs:
             kargs['priority'] = kargs['priority']

@@ -1,6 +1,6 @@
 from enum import Enum
 
-import loads, dumps
+from json import loads, dumps
 from hyper import HTTP20Connection
 from hyper.tls import init_context
 
@@ -36,14 +36,11 @@ class APNsClient(object):
         }
 
     def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None, expiration=None):
-        payload = notification.dict() if isinstance(notification, Payload) else notification
+        payload = notification
+        if isinstance(notification, Payload):
+            payload = notification.dict() 
 
-        json_payload = dumps(
-            payload, 
-            cls=self.__json_encoder, 
-            ensure_ascii=False, 
-            separators=(',', ':')
-            ).encode('utf-8')
+        json_payload = dumps(payload, cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
         headers = {
             'apns-priority': priority.value
@@ -62,17 +59,15 @@ class APNsClient(object):
                 raise exception_class_for_reason(data['reason'])
 
     def __send_request(self, token, payload, headers):
-        #Lazy Connecting
-        if not self.__connection:
-            ssl_context = init_context()
-            ssl_context.load_cert_chain(cert_file)
+        if not self.__connection: # Lazy Connecting
+            server = self.__connection_parameters['server']
+            port = self.__connection_parameters['port']
+            proto = self.__connection_parameters['proto']
 
-            self.__connection = HTTP20Connection(
-                self.__connection_parameters['server'], 
-                self.__connection_parameters['port'], 
-                ssl_context=ssl_context, 
-                self.__connection_parameters['proto']
-                )
+            ssl_context = init_context()
+            ssl_context.load_cert_chain(self.__connection_parameters['ssl_context']['cert_file'])
+
+            self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto)
 
         url = '/3/device/{}'.format(token_hex)
         stream_id = self.__connection.request('POST', url, json_payload, headers)

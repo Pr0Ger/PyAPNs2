@@ -3,7 +3,7 @@ class APNsException(Exception):
 
 
 class InternalException(APNsException):
-    """This exception should not be raised. 
+    """This exception should not be raised.
     If it is, please report this as a bug."""
     pass
 
@@ -19,7 +19,7 @@ class PayloadEmpty(BadPayloadException):
 
 
 class PayloadTooLarge(BadPayloadException):
-    """The message payload was too large. 
+    """The message payload was too large.
     The maximum payload size is 4096 bytes."""
     pass
 
@@ -57,7 +57,7 @@ class MissingDeviceToken(APNsException):
 
 class BadDeviceToken(APNsException):
     """The specified device token was bad.
-    Verify that the request contains a valid token 
+    Verify that the request contains a valid token
     and that the token matches the environment."""
     pass
 

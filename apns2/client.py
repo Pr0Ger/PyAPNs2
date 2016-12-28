@@ -35,9 +35,9 @@ class APNsClient(object):
         if 'use_alternative_port' in kargs and kargs['use_alternative_port']:
             port = ALTERNATIVE_PORT
 
-        proto = None
+        proto = 'h2'
         if 'proto' in kargs:
-            proto = kargs['proto']
+            proto = kargs['proto'] or 'h2'
 
         self.__connection = None
         self.__connection_parameters = {
@@ -46,7 +46,7 @@ class APNsClient(object):
             'ssl_context': {
                 'cert_file': cert_file
             },
-            'proto': proto or 'h2'
+            'proto': proto
         }
 
     def send_notification(self, token_hex, notification, **kargs):
@@ -65,18 +65,19 @@ class APNsClient(object):
                 raise exception_class_for_reason(data['reason'])
 
     @staticmethod
-    def get_headers(priority, topic=None, expiration=None):
-        if priority not in kargs:
-            kargs['priority'] = NotificationPriority.Immediate
+    def get_headers(**kargs):
+        priority = NotificationPriority.Immediate
+        if 'priority' in kargs:
+            kargs['priority'] = kargs['priority']
 
         headers = {
-            'apns-priority': kargs['priority'].value
+            'apns-priority': priority.value
         }
 
-        if 'topic' in kargs and kargs['topic']:
+        if 'topic' in kargs:
             headers['apns-topic'] = kargs['topic']
 
-        if 'expiration' in kargs and kargs['expiration'] is not None:
+        if 'expiration' in kargs:
             headers['apns-expiration'] = "%d" % kargs['expiration']
 
         return headers

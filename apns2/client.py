@@ -56,12 +56,12 @@ class APNsClient(object):
             'apns-priority': priority.value
         }
 
-        if topic != None:
+        if topic:
             headers['apns-topic'] = topic
 
-        if expiration != None:
+        if expiration is not None:
             headers['apns-expiration'] = "%d" % expiration
-        
+
         return headers
 
     def __send_request(self, token, payload, headers):

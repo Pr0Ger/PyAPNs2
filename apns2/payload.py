@@ -34,7 +34,7 @@ class Payload(object):
         self.__aps = {
             'alert': alert,
             'badge': badge,
-            'sound': sound.
+            'sound': sound,
             'content-available': 1 if content_available else None,
             'mutable-content': 1 if mutable_content else None,
             'category': category

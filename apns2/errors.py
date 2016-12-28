@@ -3,7 +3,8 @@ class APNsException(Exception):
 
 
 class InternalException(APNsException):
-    """This exception should not be raised. If it is, please report this as a bug."""
+    """This exception should not be raised.
+    If it is, please report this as a bug."""
     pass
 
 
@@ -18,7 +19,8 @@ class PayloadEmpty(BadPayloadException):
 
 
 class PayloadTooLarge(BadPayloadException):
-    """The message payload was too large. The maximum payload size is 4096 bytes."""
+    """The message payload was too large.
+    The maximum payload size is 4096 bytes."""
     pass
 
 
@@ -55,7 +57,8 @@ class MissingDeviceToken(APNsException):
 
 class BadDeviceToken(APNsException):
     """The specified device token was bad.
-    Verify that the request contains a valid token and that the token matches the environment."""
+    Verify that the request contains a valid token
+    and that the token matches the environment."""
     pass
 
 
@@ -124,8 +127,8 @@ class ServiceUnavailable(APNsException):
 
 class MissingTopic(BadPayloadException):
     """The apns-topic header of the request was not specified and was required.
-    The apns-topic header is mandatory when the client is connected using a certificate
-    that supports multiple topics."""
+    The apns-topic header is mandatory when the client is connected
+    using a certificate that supports multiple topics."""
     pass
 
 

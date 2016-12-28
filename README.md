@@ -3,9 +3,17 @@ Python library for interacting with the Apple Push Notification service (APNs) v
 
 ## Installation
 
-Either download the source from GitHub or use easy_install:
+Either download the source from GitHub and run:
+
+    $ python setup.py install
+
+or use easy_install:
 
     $ easy_install apns2
+
+or use pip:
+
+    $ pip install apns2
 
 ## Sample usage
 
@@ -15,6 +23,21 @@ from apns2.payload import Payload
 
 token_hex = 'b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b87'
 payload = Payload(alert="Hello World!", sound="default", badge=1)
+client = APNsClient('key.pem', use_sandbox=False, use_alternative_port=False)
+client.send_notification(token_hex, payload)
+```
+
+```python
+from apns2.client import APNsClient
+
+token_hex = 'b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b87'
+payload = {
+	"aps": {
+		"alert": "Hello World!",
+		"badge": 1,
+		"sound": "default"
+	}
+}
 client = APNsClient('key.pem', use_sandbox=False, use_alternative_port=False)
 client.send_notification(token_hex, payload)
 ```

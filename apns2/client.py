@@ -37,8 +37,7 @@ class APNsClient(object):
 
     def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None, expiration=None):
         payload = notification
-        if isinstance(notification, Payload):
-            payload = notification.dict() 
+        if isinstance(notification, Payload): payload = notification.dict() 
 
         json_payload = dumps(payload, cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
@@ -59,13 +58,14 @@ class APNsClient(object):
                 raise exception_class_for_reason(data['reason'])
 
     def __send_request(self, token, payload, headers):
-        if not self.__connection: # Lazy Connecting
+        if not self.__connection:  #Lazy Connecting
             server = self.__connection_parameters['server']
             port = self.__connection_parameters['port']
+            cert_file = self.__connection_parameters['ssl_context']['cert_file']
             proto = self.__connection_parameters['proto']
 
             ssl_context = init_context()
-            ssl_context.load_cert_chain(self.__connection_parameters['ssl_context']['cert_file'])
+            ssl_context.load_cert_chain(cert_file)
 
             self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto)
 

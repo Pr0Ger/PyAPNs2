@@ -4,4 +4,5 @@ python-targets:
 strictness: veryhigh
 pep8:
   full: true
+max-line-length: 120
 

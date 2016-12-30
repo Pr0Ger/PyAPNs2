@@ -1,8 +1,13 @@
+max-line-length: 120
 python-targets:
   - 2
   - 3
+ignore-paths:
+  - setup.py
 strictness: veryhigh
 pep8:
   full: true
-max-line-length: 120
+pylint:
+  disable:
+    too-few-public-methods
 

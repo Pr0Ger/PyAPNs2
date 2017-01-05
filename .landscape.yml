@@ -6,9 +6,3 @@ ignore-paths:
 strictness: veryhigh
 pep8:
   full: true
-pylint:
-  disable:
-    - too-few-public-methods
-  options:
-    max-attributes: 10
-    max-args: 10

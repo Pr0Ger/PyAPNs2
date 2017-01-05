@@ -22,8 +22,10 @@ class APNsClient(object):
         self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto or 'h2')
         self.__json_encoder = json_encoder
 
-    def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None, expiration=None):
-        json_payload = dumps(notification.dict(), cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+    def send_notification(self, token_hex, notification, priority=NotificationPriority.Immediate, topic=None,
+                          expiration=None):
+        json_str = dumps(notification.dict(), cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':'))
+        json_payload = json_str.encode('utf-8')
 
         headers = {
             'apns-priority': priority.value

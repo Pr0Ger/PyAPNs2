@@ -5,8 +5,7 @@ class PayloadAlert(object):
     def __init__(self, title=None, title_localized_key=None, title_localized_args=None,
                  body=None, body_localized_key=None, body_localized_args=None,
                  action_localized_key=None,
-                 launch_image=None
-                 ):
+                 launch_image=None):
         self.title = title
         self.title_localized_key = title_localized_key
         self.title_localized_args = title_localized_args

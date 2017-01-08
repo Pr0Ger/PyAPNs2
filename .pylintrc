@@ -1,0 +1,13 @@
+[DESIGN]
+max-args = 10
+max-attributes = 10
+
+[FORMAT]
+max-line-length=120
+
+[MESSAGES CONTROL]
+disable =
+    # Missing docstring
+    C0111,
+    # Too few public methods
+    R0903

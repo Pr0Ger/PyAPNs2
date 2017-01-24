@@ -1,4 +1,6 @@
 # PyAPNs2
+
+[![Join the chat at https://gitter.im/Pr0Ger/PyAPNs2](https://badges.gitter.im/Pr0Ger/PyAPNs2.svg)](https://gitter.im/Pr0Ger/PyAPNs2?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Python library for interacting with the Apple Push Notification service (APNs) via HTTP/2 protocol
 
 ## Installation

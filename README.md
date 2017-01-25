@@ -1,4 +1,10 @@
 # PyAPNs2
+
+[![PyPI version](https://img.shields.io/pypi/v/apns2.svg)](https://pypi.python.org/pypi/apns2)
+[![PyPI version](https://img.shields.io/pypi/pyversions/apns2.svg)](https://pypi.python.org/pypi/apns2)
+[![Build Status](https://img.shields.io/travis/Pr0Ger/PyAPNs2.svg)](https://travis-ci.org/Pr0Ger/PyAPNs2)
+[![Code Climate](https://img.shields.io/codeclimate/github/Pr0Ger/PyAPNs2.svg)](https://codeclimate.com/github/Pr0Ger/PyAPNs2)
+
 Python library for interacting with the Apple Push Notification service (APNs) via HTTP/2 protocol
 
 ## Installation

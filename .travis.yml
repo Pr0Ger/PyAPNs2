@@ -1,0 +1,16 @@
+language: python
+cache: pip
+python:
+- '2.7'
+- '3.4'
+- '3.5'
+- '3.6'
+install:
+- pip install .
+- pip install -r requirements-dev.txt
+script:
+- nosetests
+notifications:
+  email: false
+  slack:
+    secure: hqbqt/zePs9ognCQT/IlLmRBpTxudSBR88GK/Qu0GOJZhuBsFvUbHaDKkTsIPYoLsZPKYss0tpKsRQJG0GlO8da7d/raR4gSNI5y0ypso5ttN+OgLf4pa1bUwz0Q39aDFcuSG9aZEU134hk19KYFxz3h+gLI5C51mnnm2qOK1goq+ZNTtIz42y7kxRnF4opExLS9+ZTUxV2eA5lEvgoju6PVXfu1CkzPZKZt3XXnl3G2LGo4pitemiOIBSiVHLuakLmZ5z7IyVTbsB2Sh+2HoTdvGpdxNJcy0wDbvnZ0ZE3otrCkggaTQJ8uMEygsx8JafmDCC3sAosCqftj+SG9bG9LSmypizmipNEClSq5iKEtniGhoR1Imzbk7b5yth6q3TETY/fYFt9hATDBbn+IS0ZD0kJaVfN5Tgi6fiFtKbHPl9XxdLDffPDv5/AvSlY0CaDpTeN8j3YkMHSyuSN+u+qyai5KTWi4b2WZDY5MklTO6/3Kems/rYatCYjthzW94Di2rNDxnESeUmWy94npRxYg+HBVlVO5kG/ujHwwT5jU6icOcIJrtQAnJfTApyrEvqYtHUw0WATq/aTSYDEwQvJtV9xPX1R3XuDSZ+MBXobo+nplStkMdo0FmHcYrwi0oAohnmMu0jFMuByoY8crawrKB3EC/0/BHJvRs6QTWSE=

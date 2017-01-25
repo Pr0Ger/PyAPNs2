@@ -67,3 +67,6 @@ target/
 
 # Virtualenv
 venv/
+
+# Tox
+.tox/

@@ -1,4 +1,10 @@
 # PyAPNs2
+
+[![PyPI version](https://img.shields.io/pypi/v/apns2.svg)](https://pypi.python.org/pypi/apns2)
+[![PyPI version](https://img.shields.io/pypi/pyversions/apns2.svg)](https://pypi.python.org/pypi/apns2)
+[![Build Status](https://img.shields.io/travis/Pr0Ger/PyAPNs2.svg)](https://travis-ci.org/Pr0Ger/PyAPNs2)
+[![Code Climate](https://img.shields.io/codeclimate/github/Pr0Ger/PyAPNs2.svg)](https://codeclimate.com/github/Pr0Ger/PyAPNs2)
+
 Python library for interacting with the Apple Push Notification service (APNs) via HTTP/2 protocol
 
 ## Installation
@@ -40,6 +46,13 @@ To run the tests:
 ```shell
 pip install -r requirements-dev.txt
 python -m unittest discover test
+```
+
+You can use `tox` for running tests with all supported Python versions:
+```shell
+pyenv install 2.7.13 && pyenv install 3.3.6 && pyenv install 3.4.6 && pyenv install 3.5.3 & pyenv install 3.6.0
+pyenv local 3.6.0 3.5.3 3.4.6 3.3.6 2.7.13
+tox
 ```
 
 To run the linter:

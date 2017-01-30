@@ -50,8 +50,8 @@ python -m unittest discover test
 
 You can use `tox` for running tests with all supported Python versions:
 ```shell
-pyenv install 2.7.13 && pyenv install 3.3.6 && pyenv install 3.4.6 && pyenv install 3.5.3 & pyenv install 3.6.0
-pyenv local 3.6.0 3.5.3 3.4.6 3.3.6 2.7.13
+pyenv install 2.7.13 && pyenv install 3.4.6 && pyenv install 3.5.3 & pyenv install 3.6.0
+pyenv local 3.6.0 3.5.3 3.4.6 2.7.13
 tox
 ```
 

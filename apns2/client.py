@@ -110,7 +110,7 @@ class APNsClient(object):
     def prepare_payload(self, notification):
         return dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
-    def prepare_headers(self, priority, topic, expiration):
+    def prepare_headers(self, priority, topic, expiration, collapse_id=None):
         headers = {
             'apns-priority': priority
         }
@@ -123,12 +123,14 @@ class APNsClient(object):
 
         if self.auth_type == 'token':
             headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
+        if collapse_id:
+            headers['apns-collapse-id'] = collapse_id
 
         return headers
 
-    def prepare_request(self, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None):
+    def prepare_request(self, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, collapse_id=None):
         json_payload = self.prepare_payload(notification)
-        headers = self.prepare_headers(priority, topic, expiration)
+        headers = self.prepare_headers(priority, topic, expiration, collapse_id)
         return dict(json_payload=json_payload, headers=headers)
 
     @gen.coroutine

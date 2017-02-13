@@ -119,25 +119,27 @@ class APNsClient(object):
         if result != 'Success':
             raise exception_class_for_reason(result)
 
-    def send_notification_async(self, token_hex,priority=NotificationPriority.Immediate,
+    def send_notification_async(self, token_hex, priority=NotificationPriority.Immediate,
                                 expiration=None):
 
         url = self.__url_pattern.format(token=token_hex)
         stream_id = self.__connection.request('POST', url, self.json_payload, self.headers)
         return stream_id
 
-    @gen.coroutine
+    # @gen.coroutine
     def get_notification_result(self, stream_id):
         with self.__connection.get_response(stream_id) as response:
             if response.status == 200:
-                raise gen.Return('Success')
+                # raise gen.Return('Success')
+                return 'Success'
             else:
                 raw_data = response.read().decode('utf-8')
                 data = json.loads(raw_data)
-                raise gen.Return(data['reason'])
+                # raise gen.Return(data['reason'])
+                return data['reason']
 
     @gen.coroutine
-    def send_notification_batch(self, tokens, notification, headers=None, priority=NotificationPriority.Immediate, topic=None, expiration=None, cd=None):
+    def send_notification_batch(self, tokens, notification, headers=None, priority=NotificationPriority.Immediate, topic=None, expiration=None, cb=None):
         '''
         Send a notification to a list of tokens in batch. Instead of sending a synchronous request
         for each token, send multiple requests concurrently. This is done on the same connection,
@@ -184,14 +186,16 @@ class APNsClient(object):
                 # sent new requests or exited the while loop.) Wait for the first outstanding stream
                 # to return a response.
                 pending_stream = open_streams.popleft()
-                # result = self.get_notification_result(pending_stream.stream_id)
+                result = self.get_notification_result(pending_stream.stream_id)
 
-                # logger.info('Got response for %s: %s', pending_stream.token, result)
+                logger.info('Got response for %s: %s', pending_stream.token, result)
+                cb(pending_stream.token, result)
                 # results[pending_stream.token] = result
                 # yield result
-                yield self.get_notification_result(pending_stream.stream_id)
+                # yield self.get_notification_result(pending_stream.stream_id)
 
-        # return results
+        # yield results
+        raise gen.Return(True)
 
     def should_send_notification(self, notification, open_streams):
         return notification is not None and len(open_streams) < self.__max_concurrent_streams

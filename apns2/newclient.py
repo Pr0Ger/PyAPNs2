@@ -3,7 +3,6 @@ import json
 import logging
 from enum import Enum
 from json import dumps
-from tornado import gen
 from hyper import HTTP20Connection
 from hyper.tls import init_context
 import time
@@ -126,19 +125,18 @@ class APNsClient(object):
         stream_id = self.__connection.request('POST', url, self.json_payload, self.headers)
         return stream_id
 
-    # @gen.coroutine
+
     def get_notification_result(self, stream_id):
         with self.__connection.get_response(stream_id) as response:
             if response.status == 200:
-                # raise gen.Return('Success')
-                return 'Success'
+                return (200, 'Success')
             else:
+                reason = u''
                 raw_data = response.read().decode('utf-8')
                 data = json.loads(raw_data)
-                # raise gen.Return(data['reason'])
-                return data['reason']
+                reason = data.get('reason')
+                return (response.status, reason)
 
-    @gen.coroutine
     def send_notification_batch(self, tokens, notification, headers=None, priority=NotificationPriority.Immediate, topic=None, expiration=None, cb=None):
         '''
         Send a notification to a list of tokens in batch. Instead of sending a synchronous request
@@ -187,15 +185,14 @@ class APNsClient(object):
                 # to return a response.
                 pending_stream = open_streams.popleft()
                 result = self.get_notification_result(pending_stream.stream_id)
-
                 logger.info('Got response for %s: %s', pending_stream.token, result)
-                cb(pending_stream.token, result)
-                # results[pending_stream.token] = result
-                # yield result
-                # yield self.get_notification_result(pending_stream.stream_id)
 
-        # yield results
-        raise gen.Return(True)
+                if cb is not None:
+                    cb(pending_stream.token, result)
+                else:
+                    results[pending_stream.token] = result
+
+        return results
 
     def should_send_notification(self, notification, open_streams):
         return notification is not None and len(open_streams) < self.__max_concurrent_streams

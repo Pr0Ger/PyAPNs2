@@ -1,33 +1,50 @@
-from json import dumps
-import time
-import itertools
+# -*- coding: utf-8 -*-
+import collections
+import json
 import logging
-
-from tornado import gen
-from http2 import SimpleAsyncHTTP2Client
+from enum import Enum
+from json import dumps
+from hyper import HTTP20Connection
+from hyper.tls import init_context
+import time
 import jwt
 
-log = logging.getLogger('apns2.client')
+from .errors import ConnectionFailed, exception_class_for_reason
 
-NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
+
+class NotificationPriority(Enum):
+    Immediate = '10'
+    Delayed = '5'
+
+RequestStream = collections.namedtuple('RequestStream', ['stream_id', 'token'])
+Notification = collections.namedtuple('Notification', ['token', 'payload'])
+
+DEFAULT_APNS_PRIORITY = NotificationPriority.Immediate
+CONCURRENT_STREAMS_SAFETY_MAXIMUM = 1000
+MAX_CONNECTION_RETRIES = 3
+
+logger = logging.getLogger(__name__)
+
+# class Notification(object):
+#     def __init__(self, token, payload):
+#         self.token = token
+#         self.payload = payload
 
 
 class APNsClient(object):
-    auth_type = None
-    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, http_client_key=None, connect_timeout=20, request_timeout=20, pool_size=5):
+    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, http_client_key=None, proto=None, json_encoder=None, request_timeout=20, pool_size=5, connect_timeout=20):
         server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
         port = 2197 if use_alternative_port else 443
         self._auth_token = None
         self.auth_token_expired = False
-        cert_options = None
         self.json_payload = None
         self.headers = None
+        ssl_context = None
 
-        # authenticate with individual certificates for every app
         if cert_file and key_file:
-            cert_options = dict(validate_cert=True, client_cert=cert_file, client_key=key_file)
+            ssl_context = init_context()
+            ssl_context.load_cert_chain(cert_file)
             self.auth_type = 'cert'
-        # auth with universal JWT token
         elif team and key_id and key_file:
             self._team = team
 
@@ -39,36 +56,13 @@ class APNsClient(object):
             self._header_format = 'bearer %s'
             self.auth_type = 'token'
 
-        self.__url_pattern = '/3/device/{token}'
         self.cert_file = cert_file
-
-        self.pool = []
-
-        if use_sandbox:
-            pool_size = 1
-
-        pool_size = min(1, pool_size)
-
-        for ind in xrange(pool_size):
-            ind_http_client_key = "{}{}".format(http_client_key, ind)
-            self.pool.append(self._init_client(server, port, cert_options, connect_timeout, request_timeout, ind_http_client_key))
-
-        self.conn_pool = itertools.cycle(self.pool)
-
-
-    def _init_client(self, server, port, cert_options, connect_timeout, request_timeout, http_client_key):
-        return SimpleAsyncHTTP2Client(
-            host=server,
-            port=port,
-            secure=True,
-            cert_options=cert_options,
-            enable_push=False,
-            connect_timeout=connect_timeout,
-            request_timeout=request_timeout,
-            max_streams=100,
-            initial_window_size=655350,
-            http_client_key=http_client_key
-        )
+        self.__url_pattern = '/3/device/{token}'
+        
+        self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto or 'h2')
+        self.__json_encoder = json_encoder
+        self.__max_concurrent_streams = None
+        self.__previous_server_max_concurrent_streams = None
 
     def __repr__(self):
         uid = None
@@ -88,32 +82,18 @@ class APNsClient(object):
             self.auth_token_expired = False
         return self._auth_token
 
-    @gen.coroutine
-    def send_notifications(self, tokens, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, cb=None):
-        json_payload = self.prepare_payload(notification)
-        
-        headers = self.prepare_headers(priority, topic, expiration)
-      
-        futures = []
-
-        for token in tokens:
-            url = self.__url_pattern.format(token=token)
-
-            # if self.auth_type == 'token':
-            #     headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
-
-            future = self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
-            futures.append(future)
-
-        yield futures
-
     def prepare_payload(self, notification):
-        return dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        return dumps(notification.dict(), cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
     def prepare_headers(self, priority, topic, expiration, collapse_id=None):
-        headers = {
-            'apns-priority': priority
-        }
+        headers = {}
+
+        if priority != DEFAULT_APNS_PRIORITY:
+            headers['apns-priority'] = priority.value
+
+        # headers = {
+        #     'apns-priority': priority
+        # }
 
         if topic:
             headers['apns-topic'] = topic
@@ -123,34 +103,162 @@ class APNsClient(object):
 
         if self.auth_type == 'token':
             headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
+
         if collapse_id:
             headers['apns-collapse-id'] = collapse_id
 
         return headers
 
-    def prepare_request(self, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, collapse_id=None):
+    def prepare_request(self, notification, priority=NotificationPriority.Immediate, topic=None, expiration=None, collapse_id=None):
         json_payload = self.prepare_payload(notification)
         headers = self.prepare_headers(priority, topic, expiration, collapse_id)
         return dict(json_payload=json_payload, headers=headers)
 
-    @gen.coroutine
-    def send(self, token, json_payload=None, headers=None, cb=None):
-        url = self.__url_pattern.format(token=token)
 
-        if not json_payload:
-            json_payload = self.json_payload
-        if not headers:
-            headers = self.headers
+    def send_notification(self, token_hex, notification, topic, priority=NotificationPriority.Immediate,
+                          expiration=None):
+        stream_id = self.send_notification_async(token_hex, notification, topic, priority, expiration)
+        result = self.get_notification_result(stream_id)
+        if result != 'Success':
+            raise exception_class_for_reason(result)
 
-        yield self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+    def send_notification_async(self, token_hex, priority=NotificationPriority.Immediate,
+                                expiration=None):
+
+        url = self.__url_pattern.format(token=token_hex)
+        stream_id = self.__connection.request('POST', url, self.json_payload, self.headers)
+        return stream_id
 
 
-    @gen.coroutine
-    def send_notification(self, token, notification=None, payload=None, headers=None, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, cb=None):
-        if payload is None and notification:
-            self.json_payload = self.prepare_payload(notification)
+    def get_notification_result(self, stream_id):
+        with self.__connection.get_response(stream_id) as response:
+            if response.status == 200:
+                return (200, 'Success')
+            else:
+                reason = u''
+                raw_data = response.read().decode('utf-8')
+                data = json.loads(raw_data)
+                reason = data.get('reason')
+                return (response.status, reason)
 
-        if headers is None:
-            self.headers = self.prepare_headers(priority, topic, expiration)
+    def send_notification_batch(self, tokens, notification, headers=None, priority=NotificationPriority.Immediate, topic=None, expiration=None, collapse_id=None, cb=None):
+        '''
+        Send a notification to a list of tokens in batch. Instead of sending a synchronous request
+        for each token, send multiple requests concurrently. This is done on the same connection,
+        using HTTP/2 streams (one request per stream).
 
-        yield self.send(token=token, cb=cb)
+        APNs allows many streams simultaneously, but the number of streams can vary depending on
+        server load. This method reads the SETTINGS frame sent by the server to figure out the
+        maximum number of concurrent streams. Typically, APNs reports a maximum of 500.
+
+        The function returns a dictionary mapping each token to its result. The result is "Success"
+        if the token was sent successfully, or the string returned by APNs in the 'reason' field of
+        the response, if the token generated an error.
+        '''
+        self.json_payload = self.prepare_payload(notification)
+        
+        self.headers = self.prepare_headers(priority, topic, expiration)
+
+        token_iterator = iter(tokens)
+        next_token = next(token_iterator, None)
+        # Make sure we're connected to APNs, so that we receive and process the server's SETTINGS
+        # frame before starting to send notifications.
+        self.connect()
+
+        results = {}
+        open_streams = collections.deque()
+        force_results = False
+
+        # Loop on the tokens, sending as many requests as possible concurrently to APNs.
+        # When reaching the maximum concurrent streams limit, wait for a response before sending
+        # another request.
+        while len(open_streams) > 0 or next_token is not None or force_results:
+            # Update the max_concurrent_streams on every iteration since a SETTINGS frame can be
+            # sent by the server at any time.
+            self.update_max_concurrent_streams()
+            if self.should_send_notification(next_token, open_streams, force_results):
+                try:
+                    logger.info('Sending to token %s', next_token)
+                    stream_id = self.send_notification_async(next_token)
+                    open_streams.append(RequestStream(stream_id, next_token))
+
+                    next_token = next(token_iterator, None)
+                    if next_token is None:
+                        # No tokens remaining. Proceed to get results for pending requests.
+                        logger.info('Finished sending all tokens, waiting for pending requests.')
+                except Exception as err:
+                    force_results = True
+                    logger.error('Error while sending to APNS: %s', err)
+
+            else:
+                # We have at least one request waiting for response (otherwise we would have either
+                # sent new requests or exited the while loop.) Wait for the first outstanding stream
+                # to return a response.
+                pending_stream = open_streams.popleft()
+                try:
+                    result = self.get_notification_result(pending_stream.stream_id)
+                    logger.info('Got response for %s: %s', pending_stream.token, result)
+
+                    if cb is not None:
+                        cb(pending_stream.token, result)
+                    else:
+                        results[pending_stream.token] = result
+                except Exception as err:
+                    logger.error('Error %s while getting result for token %s and stream_id %s', err, pending_stream.token, pending_stream.stream_id)
+                    # @TODO: resend token!
+
+                if len(open_streams) == 0 and force_results:  # получили все результаты и надо переподключиться
+                    self.__connection.close()
+                    self.__previous_server_max_concurrent_streams = None
+                    self.connect()
+                    force_results = False
+                    logger.info('Try to reconnect and resend')
+
+        return results
+
+    def should_send_notification(self, notification, open_streams, force_results=False):
+        return not force_results and (notification is not None and len(open_streams) < self.__max_concurrent_streams)
+
+    def update_max_concurrent_streams(self):
+        # Get the max_concurrent_streams setting returned by the server.
+        # The max_concurrent_streams value is saved in the H2Connection instance that must be
+        # accessed using a with statement in order to acquire a lock.
+        # pylint: disable=protected-access
+        with self.__connection._conn as connection:
+            max_concurrent_streams = connection.remote_settings.max_concurrent_streams
+            logger.info('connection.remote_settings.max_concurrent_streams=%s', connection.remote_settings.max_concurrent_streams)
+
+        if max_concurrent_streams == self.__previous_server_max_concurrent_streams:
+            # The server hasn't issued an updated SETTINGS frame.
+            return
+
+        self.__previous_server_max_concurrent_streams = max_concurrent_streams
+        # Handle and log unexpected values sent by APNs, just in case.
+        if max_concurrent_streams > CONCURRENT_STREAMS_SAFETY_MAXIMUM:
+            logger.warning('APNs max_concurrent_streams too high (%s), resorting to default maximum (%s)',
+                           max_concurrent_streams, CONCURRENT_STREAMS_SAFETY_MAXIMUM)
+            self.__max_concurrent_streams = CONCURRENT_STREAMS_SAFETY_MAXIMUM
+        elif max_concurrent_streams < 1:
+            logger.warning('APNs reported max_concurrent_streams less than 1 (%s), using value of 1',
+                           max_concurrent_streams)
+            self.__max_concurrent_streams = 1
+        else:
+            logger.info('APNs set max_concurrent_streams to %s', max_concurrent_streams)
+            self.__max_concurrent_streams = max_concurrent_streams
+
+    def connect(self):
+        '''
+        Establish a connection to APNs. If already connected, the function does nothing. If the
+        connection fails, the function retries up to MAX_CONNECTION_RETRIES times.
+        '''
+        retries = 0
+        while retries < MAX_CONNECTION_RETRIES:
+            try:
+                self.__connection.connect()
+                logger.info('Connected to APNs')
+                return
+            except Exception:  # pylint: disable=broad-except
+                retries += 1
+                logger.exception('Failed connecting to APNs (attempt %s of %s)', retries, MAX_CONNECTION_RETRIES)
+
+        raise ConnectionFailed()

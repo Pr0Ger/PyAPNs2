@@ -5,6 +5,7 @@ import logging
 from enum import Enum
 from json import dumps
 from hyper import HTTP20Connection
+from hyper.http20.exceptions import StreamResetError
 from hyper.tls import init_context
 import time
 import jwt
@@ -178,14 +179,14 @@ class APNsClient(object):
             self.update_max_concurrent_streams()
             if self.should_send_notification(next_token, open_streams, force_results):
                 try:
-                    logger.info('Sending to token %s', next_token)
+                    # logger.debug('Sending to token %s', next_token)
                     stream_id = self.send_notification_async(next_token)
                     open_streams.append(RequestStream(stream_id, next_token))
 
                     next_token = next(token_iterator, None)
                     if next_token is None:
                         # No tokens remaining. Proceed to get results for pending requests.
-                        logger.info('Finished sending all tokens, waiting for pending requests.')
+                        logger.debug('Finished sending all tokens, waiting for pending requests.')
                 except Exception as err:
                     force_results = True
                     logger.error('Error while sending to APNS: %s', err)
@@ -196,16 +197,25 @@ class APNsClient(object):
                 # to return a response.
                 pending_stream = open_streams.popleft()
                 try:
+                    result = (None, None)
                     result = self.get_notification_result(pending_stream.stream_id)
-                    logger.info('Got response for %s: %s', pending_stream.token, result)
+                    # logger.debug('Got response for %s: %s', pending_stream.token, result)
 
                     if cb is not None:
                         cb(pending_stream.token, result)
                     else:
                         results[pending_stream.token] = result
+                except StreamResetError as err:
+                    result = (666, 'WTF')
+
                 except Exception as err:
                     logger.error('Error %s while getting result for token %s and stream_id %s', err, pending_stream.token, pending_stream.stream_id)
                     # @TODO: resend token!
+                finally:
+                    if cb is not None:
+                        cb(pending_stream.token, result)
+                    else:
+                        results[pending_stream.token] = result
 
                 if len(open_streams) == 0 and force_results:  # получили все результаты и надо переподключиться
                     self.__connection.close()
@@ -226,7 +236,7 @@ class APNsClient(object):
         # pylint: disable=protected-access
         with self.__connection._conn as connection:
             max_concurrent_streams = connection.remote_settings.max_concurrent_streams
-            logger.info('connection.remote_settings.max_concurrent_streams=%s', connection.remote_settings.max_concurrent_streams)
+            # logger.debug('connection.remote_settings.max_concurrent_streams=%s', connection.remote_settings.max_concurrent_streams)
 
         if max_concurrent_streams == self.__previous_server_max_concurrent_streams:
             # The server hasn't issued an updated SETTINGS frame.
@@ -255,7 +265,7 @@ class APNsClient(object):
         while retries < MAX_CONNECTION_RETRIES:
             try:
                 self.__connection.connect()
-                logger.info('Connected to APNs')
+                # logger.debug('Connected to APNs')
                 return
             except Exception:  # pylint: disable=broad-except
                 retries += 1

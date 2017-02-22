@@ -200,11 +200,6 @@ class APNsClient(object):
                     result = (None, None)
                     result = self.get_notification_result(pending_stream.stream_id)
                     # logger.debug('Got response for %s: %s', pending_stream.token, result)
-
-                    if cb is not None:
-                        cb(pending_stream.token, result)
-                    else:
-                        results[pending_stream.token] = result
                 except StreamResetError as err:
                     result = (666, 'WTF')
 

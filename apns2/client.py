@@ -64,6 +64,7 @@ class APNsClient(object):
         self.__json_encoder = json_encoder
         self.__max_concurrent_streams = None
         self.__previous_server_max_concurrent_streams = None
+        self.open_streams = collections.deque()
 
     def __repr__(self):
         uid = None
@@ -167,21 +168,20 @@ class APNsClient(object):
         self.connect()
 
         results = {}
-        open_streams = collections.deque()
         force_results = False
 
         # Loop on the tokens, sending as many requests as possible concurrently to APNs.
         # When reaching the maximum concurrent streams limit, wait for a response before sending
         # another request.
-        while len(open_streams) > 0 or next_token is not None or force_results:
+        while len(self.open_streams) > 0 or next_token is not None or force_results:
             # Update the max_concurrent_streams on every iteration since a SETTINGS frame can be
             # sent by the server at any time.
             self.update_max_concurrent_streams()
-            if self.should_send_notification(next_token, open_streams, force_results):
+            if self.should_send_notification(next_token, force_results):
                 try:
                     # logger.debug('Sending to token %s', next_token)
                     stream_id = self.send_notification_async(next_token)
-                    open_streams.append(RequestStream(stream_id, next_token))
+                    self.open_streams.append(RequestStream(stream_id, next_token))
 
                     next_token = next(token_iterator, None)
                     if next_token is None:
@@ -195,7 +195,7 @@ class APNsClient(object):
                 # We have at least one request waiting for response (otherwise we would have either
                 # sent new requests or exited the while loop.) Wait for the first outstanding stream
                 # to return a response.
-                pending_stream = open_streams.popleft()
+                pending_stream = self.open_streams.popleft()
                 try:
                     result = (None, None)
                     result = self.get_notification_result(pending_stream.stream_id)
@@ -212,7 +212,7 @@ class APNsClient(object):
                     else:
                         results[pending_stream.token] = result
 
-                if len(open_streams) == 0 and force_results:  # получили все результаты и надо переподключиться
+                if len(self.open_streams) == 0 and force_results:  # получили все результаты и надо переподключиться
                     self.__connection.close()
                     self.__previous_server_max_concurrent_streams = None
                     self.connect()
@@ -221,8 +221,8 @@ class APNsClient(object):
 
         return results
 
-    def should_send_notification(self, notification, open_streams, force_results=False):
-        return not force_results and (notification is not None and len(open_streams) < self.__max_concurrent_streams)
+    def should_send_notification(self, notification, force_results=False):
+        return not force_results and (notification is not None and len(self.open_streams) < self.__max_concurrent_streams)
 
     def update_max_concurrent_streams(self):
         # Get the max_concurrent_streams setting returned by the server.

@@ -24,9 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class APNsClient(object):
-    def __init__(self, cert_file, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None):
-        server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
-        port = 2197 if use_alternative_port else 443
+    def __init__(self, cert_file, server='api.push.apple.com', port=443, proto=None, json_encoder=None):
         ssl_context = init_context()
         ssl_context.load_cert_chain(cert_file)
         self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto or 'h2')

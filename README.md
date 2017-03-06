@@ -22,9 +22,19 @@ from apns2.payload import Payload
 token_hex = 'b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b87'
 payload = Payload(alert="Hello World!", sound="default", badge=1)
 topic = 'com.example.App'
-client = APNsClient('key.pem', use_sandbox=False, use_alternative_port=False)
+client = APNsClient('key.pem')
 client.send_notification(token_hex, payload, topic)
 ```
+
+## Custom hosts
+
+To use APNS sandbox:
+
+client = APNsClient('key.pem', host='api.development.push.apple.com')
+
+To use alternative port:
+
+client = APNsClient('key.pem', port=2197)
 
 ## Further Info
 

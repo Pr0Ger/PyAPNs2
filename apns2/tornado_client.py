@@ -102,10 +102,12 @@ class APNsClient(object):
             # if self.auth_type == 'token':
             #     headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
 
-            future = self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
-            futures.append(future)
+            # future = self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+            # futures.append(future)
 
-        yield futures
+            yield self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+
+        # yield futures
 
     def prepare_payload(self, notification):
         return dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')

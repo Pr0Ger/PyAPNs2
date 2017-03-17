@@ -62,10 +62,10 @@ class APNsClient(object):
             port=port,
             secure=True,
             cert_options=cert_options,
-            enable_push=False,
+            enable_push=True,
             connect_timeout=connect_timeout,
             request_timeout=request_timeout,
-            max_streams=100,
+            max_streams=1000,
             initial_window_size=655350,
             http_client_key=http_client_key
         )

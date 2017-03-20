@@ -24,15 +24,24 @@ logger = logging.getLogger(__name__)
 
 
 class APNsClient(object):
+    SANDBOX_SERVER = 'api.development.push.apple.com'
+    LIVE_SERVER = 'api.push.apple.com'
+
+    DEFAULT_PORT = 443
+    ALTERNATIVE_PORT = 2197
+
     def __init__(self, cert_file, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None, password=None):
-        server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
-        port = 2197 if use_alternative_port else 443
         ssl_context = init_context()
         ssl_context.load_cert_chain(cert_file, password=password)
-        self.__connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto or 'h2')
+        self._init_connection(use_sandbox, use_alternative_port, ssl_context, proto)
         self.__json_encoder = json_encoder
         self.__max_concurrent_streams = None
         self.__previous_server_max_concurrent_streams = None
+
+    def _init_connection(self, use_sandbox, use_alternative_port, ssl_context, proto):
+        server = self.SANDBOX_SERVER if use_sandbox else self.LIVE_SERVER
+        port = self.ALTERNATIVE_PORT if use_alternative_port else self.DEFAULT_PORT
+        self._connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto or 'h2')
 
     def send_notification(self, token_hex, notification, topic, priority=NotificationPriority.Immediate,
                           expiration=None):
@@ -54,11 +63,11 @@ class APNsClient(object):
             headers['apns-expiration'] = '%d' % expiration
 
         url = '/3/device/{}'.format(token_hex)
-        stream_id = self.__connection.request('POST', url, json_payload, headers)
+        stream_id = self._connection.request('POST', url, json_payload, headers)
         return stream_id
 
     def get_notification_result(self, stream_id):
-        with self.__connection.get_response(stream_id) as response:
+        with self._connection.get_response(stream_id) as response:
             if response.status == 200:
                 return 'Success'
             else:
@@ -124,7 +133,7 @@ class APNsClient(object):
         # The max_concurrent_streams value is saved in the H2Connection instance that must be
         # accessed using a with statement in order to acquire a lock.
         # pylint: disable=protected-access
-        with self.__connection._conn as connection:
+        with self._connection._conn as connection:
             max_concurrent_streams = connection.remote_settings.max_concurrent_streams
 
         if max_concurrent_streams == self.__previous_server_max_concurrent_streams:
@@ -153,7 +162,7 @@ class APNsClient(object):
         retries = 0
         while retries < MAX_CONNECTION_RETRIES:
             try:
-                self.__connection.connect()
+                self._connection.connect()
                 logger.info('Connected to APNs')
                 return
             except Exception:  # pylint: disable=broad-except

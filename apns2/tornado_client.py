@@ -1,109 +1,110 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from json import dumps
 import time
 import itertools
 import logging
+import pprint
+from functools import partial
 
 from tornado import gen
+from tornado.ioloop import PeriodicCallback
 from http2 import SimpleAsyncHTTP2Client
 import jwt
 
-log = logging.getLogger('apns2.client')
+log = logging.getLogger('apns2.tornado_client')
 
 NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 
 class APNsClient(object):
-    auth_type = None
-    def __init__(self, cert_file=None, key_file=None, team=None, key_id=None, use_sandbox=False, use_alternative_port=False, http_client_key=None, connect_timeout=10, request_timeout=10, pool_size=5):
-        server = 'api.development.push.apple.com' if use_sandbox else 'api.push.apple.com'
-        port = 2197 if use_alternative_port else 443
-        self._auth_token = None
-        self.auth_token_expired = False
-        cert_options = None
-        self.json_payload = None
-        self.headers = None
-
-        # authenticate with individual certificates for every app
-        if cert_file and key_file:
-            cert_options = dict(validate_cert=True, client_cert=cert_file, client_key=key_file)
-            self.auth_type = 'cert'
-        # auth with universal JWT token
-        elif team and key_id and key_file:
-            self._team = team
-
-            with open(key_file, 'r') as tmp:
-                self._auth_key = tmp.read()
-
-            self._key_id = key_id
-            self._auth_token = self.get_auth_token()
-            self._header_format = 'bearer %s'
-            self.auth_type = 'token'
-
+    def __init__(self, key_file=None, teams_data=None):
+        self._header_format = 'bearer %s'
         self.__url_pattern = '/3/device/{token}'
-        self.cert_file = cert_file
 
-        self.pool = []
+        self._jwt_expire_interval = 3000  # 50 minuts
+        self._teams = {}
 
-        pool_size = max(1, pool_size)
+        self.configure(key_file, teams_data)
 
-        for ind in xrange(pool_size):
-            ind_http_client_key = "{}{}".format(http_client_key, ind)
-            self.pool.append(self._init_client(server, port, cert_options, connect_timeout, request_timeout, ind_http_client_key))
+    def configure(self, key_file, teams_data):
+        """ Настройка ID команд APNS
+        Args:
+            teams_data: dict
+        """
+        for team_name, data in teams_data.iteritems():
+            if not data.get('NAME'):
+                data['NAME'] = team_name
 
-        self.conn_pool = itertools.cycle(self.pool)
+            if not data.get('conns'):
+                data['conns'] = {}
 
+            with open(key_file.format(key_id=data['KEY_ID']), 'r') as tmp:
+                data['auth_key'] = tmp.read()
 
-    def _init_client(self, server, port, cert_options, connect_timeout, request_timeout, http_client_key):
+            if data.get('DEFAULT'):
+                self._teams['default'] = data
+            elif data.get('BUNDLES'):
+                for app_bundle_id in data.get('BUNDLES'):
+                    self._teams[app_bundle_id] = data
+            else:
+                raise Exception('Team %s is not default and has no bundles: %s', team_name, data)
+
+    def get_conn(self, app_bundle_id, sandbox):
+        if not self._get_team(app_bundle_id)['conns'].get(sandbox):
+            client_name = "{}_{}".format(self._get_team(app_bundle_id)['NAME'], sandbox)
+            self._get_team(app_bundle_id)['conns'][sandbox] = self._init_client(sandbox, client_name)
+
+        return self._get_team(app_bundle_id)['conns'][sandbox]
+
+    def _init_client(self, sandbox, client_name):
+        server = 'api.development.push.apple.com' if sandbox else 'api.push.apple.com'
+        port = 443
+
         return SimpleAsyncHTTP2Client(
             host=server,
             port=port,
             secure=True,
-            cert_options=cert_options,
             enable_push=True,
-            connect_timeout=connect_timeout,
-            request_timeout=request_timeout,
-            max_streams=1000,  # APNS sends this value
-            http_client_key=http_client_key
+            connect_timeout=5,
+            request_timeout=5,
+            max_streams=1000,
+            http_client_key=client_name
         )
 
-    def __repr__(self):
-        uid = None
-        if self.auth_type == 'cert':
-            uid = self.cert_file
-        elif self.auth_type == 'token':
-            uid = self._key_id
-        return "APNSClient: {}".format(uid)
+    def _get_team(self, topic):
+        return self._teams.get(topic, self._teams.get('default'))
 
-    def get_auth_token(self):
-        if not self._auth_token or self.auth_token_expired:
-            claim = dict(
-                iss=self._team,
-                iat=int(time.time())
-            )
-            self._auth_token = jwt.encode(claim, self._auth_key, algorithm='ES256', headers={'kid': self._key_id})
-            self.auth_token_expired = False
-        return self._auth_token
+    def _get_jwt(self, topic):
+        team = self._get_team(topic)
 
-    @gen.coroutine
-    def send_notifications(self, tokens, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, cb=None):
-        json_payload = self.prepare_payload(notification)
-        
-        headers = self.prepare_headers(priority, topic, expiration)
-      
-        futures = []
+        token = team.get('jwt')
 
-        for token in tokens:
-            url = self.__url_pattern.format(token=token)
+        if token:
+            return token
+        else:
+            return self._generate_jwt(team)
 
-            # if self.auth_type == 'token':
-            #     headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
+    def _generate_jwt(self, team):
+        now = int(time.time())
+        claim = dict(
+            iss=team['TEAM_ID'],
+            iat=now
+        )
+        headers = dict(kid=team['KEY_ID'])
 
-            # future = self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
-            # futures.append(future)
+        token = jwt.encode(claim, team['auth_key'], algorithm='ES256', headers=headers).decode('ascii')
+        team['jwt'] = token
 
-            yield self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+        if not team.get('jwt_regenerator'):
+            func = partial(self._generate_jwt, team)
+            team['jwt_regenerator'] = PeriodicCallback(func, self._jwt_expire_interval * 1000)
 
-        # yield futures
+        if not team['jwt_regenerator'].is_running():
+            team['jwt_regenerator'].start()
+
+        return token
 
     def prepare_payload(self, notification):
         return dumps(notification.dict(), ensure_ascii=False, separators=(',', ':')).encode('utf-8')
@@ -119,36 +120,19 @@ class APNsClient(object):
         if expiration is not None:
             headers['apns-expiration'] = "%d" % expiration
 
-        if self.auth_type == 'token':
-            headers['Authorization'] = self._header_format % self.get_auth_token().decode('ascii')
+        auth_token = self._get_jwt(topic)
+
+        headers['authorization'] = self._header_format % auth_token
+
         if collapse_id:
             headers['apns-collapse-id'] = collapse_id
 
         return headers
 
-    def prepare_request(self, notification, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, collapse_id=None):
-        json_payload = self.prepare_payload(notification)
-        headers = self.prepare_headers(priority, topic, expiration, collapse_id)
-        return dict(json_payload=json_payload, headers=headers)
-
     @gen.coroutine
-    def send(self, token, json_payload=None, headers=None, cb=None):
+    def send_push(self, token, topic, notification, sandbox=False, priority=NOTIFICATION_PRIORITY['immediate'], expiration=None, cb=None):
         url = self.__url_pattern.format(token=token)
+        json_payload = self.prepare_payload(notification)
+        headers = self.prepare_headers(priority, topic, expiration)
 
-        if not json_payload:
-            json_payload = self.json_payload
-        if not headers:
-            headers = self.headers
-
-        yield self.conn_pool.next().fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
-
-
-    @gen.coroutine
-    def send_notification(self, token, notification=None, payload=None, headers=None, priority=NOTIFICATION_PRIORITY['immediate'], topic=None, expiration=None, cb=None):
-        if payload is None and notification:
-            self.json_payload = self.prepare_payload(notification)
-
-        if headers is None:
-            self.headers = self.prepare_headers(priority, topic, expiration)
-
-        yield self.send(token=token, cb=cb)
+        yield self.get_conn(topic, sandbox).fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)

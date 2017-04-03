@@ -135,4 +135,5 @@ class APNsClient(object):
         json_payload = self.prepare_payload(notification)
         headers = self.prepare_headers(priority, topic, expiration)
 
-        yield self.get_conn(topic, sandbox).fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+        self.get_conn(topic, sandbox).fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+        raise gen.Return(True)

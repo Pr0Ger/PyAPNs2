@@ -74,9 +74,9 @@ class APNsClient(object):
             port=self.port,
             secure=True,
             enable_push=True,
-            connect_timeout=5,
-            request_timeout=5,
-            max_streams=150,
+            connect_timeout=20,
+            request_timeout=20,
+            max_streams=1000,
             http_client_key=client_name
         )
 

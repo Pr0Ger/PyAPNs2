@@ -8,7 +8,6 @@ import logging
 import pprint
 from functools import partial
 
-from tornado import gen
 from tornado.ioloop import PeriodicCallback
 from http2 import SimpleAsyncHTTP2Client
 import jwt
@@ -136,11 +135,9 @@ class APNsClient(object):
 
         return headers
 
-    @gen.coroutine
     def send_push(self, token, topic, notification, sandbox=False, priority=NOTIFICATION_PRIORITY['immediate'], expiration=None, cb=None):
         url = self.__url_pattern.format(token=token)
         json_payload = self.prepare_payload(notification)
         headers = self.prepare_headers(priority, topic, expiration)
 
-        self.get_conn(topic, sandbox).fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
-        raise gen.Return(True)
+        return self.get_conn(topic, sandbox).fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)

@@ -2,7 +2,11 @@
 
 from setuptools import setup
 
-dependencies = ['hyper>=0.7']
+dependencies = [
+    'hyper>=0.7',
+    'PyJWT>=1.4.0',
+    'cryptography>=1.7.2',
+]
 
 try:
     # noinspection PyUnresolvedReferences

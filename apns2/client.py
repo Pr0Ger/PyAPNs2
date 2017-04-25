@@ -3,10 +3,11 @@ import json
 import logging
 from enum import Enum
 
-from hyper import HTTP20Connection
-from hyper.tls import init_context
-
 from .errors import ConnectionFailed, exception_class_for_reason
+
+# We don't generally need to know about the Credentials subclasses except to
+# keep the old API, where APNsClient took a cert_file
+from .credentials import CertificateCredentials
 
 
 class NotificationPriority(Enum):
@@ -30,18 +31,22 @@ class APNsClient(object):
     DEFAULT_PORT = 443
     ALTERNATIVE_PORT = 2197
 
-    def __init__(self, cert_file, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None, password=None):
-        ssl_context = init_context()
-        ssl_context.load_cert_chain(cert_file, password=password)
-        self._init_connection(use_sandbox, use_alternative_port, ssl_context, proto)
+    def __init__(self, credentials, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None, password=None):
+        if credentials is None or isinstance(credentials, str):
+            self.__credentials = CertificateCredentials(credentials)
+        else:
+            self.__credentials = credentials
+        self._init_connection(use_sandbox, use_alternative_port, proto)
+
         self.__json_encoder = json_encoder
         self.__max_concurrent_streams = None
         self.__previous_server_max_concurrent_streams = None
 
-    def _init_connection(self, use_sandbox, use_alternative_port, ssl_context, proto):
+    def _init_connection(self, use_sandbox, use_alternative_port, proto):
         server = self.SANDBOX_SERVER if use_sandbox else self.LIVE_SERVER
         port = self.ALTERNATIVE_PORT if use_alternative_port else self.DEFAULT_PORT
-        self._connection = HTTP20Connection(server, port, ssl_context=ssl_context, force_proto=proto or 'h2')
+        self._connection = self.__credentials.create_connection(server, port,
+                                                                proto)
 
     def send_notification(self, token_hex, notification, topic, priority=NotificationPriority.Immediate,
                           expiration=None):
@@ -61,6 +66,10 @@ class APNsClient(object):
 
         if expiration is not None:
             headers['apns-expiration'] = '%d' % expiration
+
+        auth_header = self.__credentials.get_authorization_header(topic)
+        if auth_header is not None:
+            headers['authorization'] = auth_header
 
         url = '/3/device/{}'.format(token_hex)
         stream_id = self._connection.request('POST', url, json_payload, headers)

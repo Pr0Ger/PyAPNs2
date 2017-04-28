@@ -45,10 +45,10 @@ class TokenCredentials(Credentials):
         self.__auth_key_id = auth_key_id
         self.__team_id = team_id
         self.__encryption_algorithm = DEFAULT_TOKEN_ENCRYPTION_ALGORITHM if \
-                                      encryption_algorithm is None else \
-                                      encryption_algorithm
+            encryption_algorithm is None else \
+            encryption_algorithm
         self.__token_lifetime = DEFAULT_TOKEN_LIFETIME if \
-                                token_lifetime is None else token_lifetime
+            token_lifetime is None else token_lifetime
 
         # Dictionary of {topic: (issue time, ascii decoded token)}
         self.__topicTokens = {}

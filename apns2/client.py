@@ -30,6 +30,7 @@ class APNsClient(object):
 
     DEFAULT_PORT = 443
     ALTERNATIVE_PORT = 2197
+
     def __init__(self, credentials, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None, password=None):
         if credentials is None or isinstance(credentials, str):
             self.__credentials = CertificateCredentials(credentials)

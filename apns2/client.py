@@ -1,7 +1,11 @@
 import collections
-import json
 import logging
 from enum import Enum
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from hyper import HTTP20Connection
 from hyper.tls import init_context

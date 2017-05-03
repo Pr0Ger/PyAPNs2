@@ -49,14 +49,14 @@ class APNsClient(object):
                                                                 proto)
 
     def send_notification(self, token_hex, notification, topic, priority=NotificationPriority.Immediate,
-                          expiration=None):
-        stream_id = self.send_notification_async(token_hex, notification, topic, priority, expiration)
+                          expiration=None, collapse_id=None):
+        stream_id = self.send_notification_async(token_hex, notification, topic, priority, expiration, collapse_id)
         result = self.get_notification_result(stream_id)
         if result != 'Success':
             raise exception_class_for_reason(result)
 
     def send_notification_async(self, token_hex, notification, topic, priority=NotificationPriority.Immediate,
-                                expiration=None):
+                                expiration=None, collapse_id=None):
         json_str = json.dumps(notification.dict(), cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':'))
         json_payload = json_str.encode('utf-8')
 
@@ -71,6 +71,9 @@ class APNsClient(object):
         if auth_header is not None:
             headers['authorization'] = auth_header
 
+        if collapse_id is not None:
+            headers['apns-collapse-id'] = collapse_id
+
         url = '/3/device/{}'.format(token_hex)
         stream_id = self._connection.request('POST', url, json_payload, headers)
         return stream_id
@@ -84,7 +87,7 @@ class APNsClient(object):
                 data = json.loads(raw_data)
                 return data['reason']
 
-    def send_notification_batch(self, notifications, topic, priority=NotificationPriority.Immediate, expiration=None):
+    def send_notification_batch(self, notifications, topic, priority=NotificationPriority.Immediate, expiration=None, collapse_id=None):
         '''
         Send a notification to a list of tokens in batch. Instead of sending a synchronous request
         for each token, send multiple requests concurrently. This is done on the same connection,
@@ -116,7 +119,7 @@ class APNsClient(object):
             if self.should_send_notification(next_notification, open_streams):
                 logger.info('Sending to token %s', next_notification.token)
                 stream_id = self.send_notification_async(next_notification.token, next_notification.payload, topic,
-                                                         priority, expiration)
+                                                         priority, expiration, collapse_id)
                 open_streams.append(RequestStream(stream_id, next_notification.token))
 
                 next_notification = next(notification_iterator, None)

@@ -32,14 +32,14 @@ class ClientTestCase(TestCase):
         self.mock_results = None
         self.next_stream_id = 0
 
-        with patch('apns2.client.HTTP20Connection') as mock_connection_constructor, patch('apns2.client.init_context'):
+        with patch('apns2.credentials.HTTP20Connection') as mock_connection_constructor, patch('apns2.credentials.init_context'):
             self.mock_connection = MagicMock()
             self.mock_connection.get_response.side_effect = self.mock_get_response
             self.mock_connection.request.side_effect = self.mock_request
             self.mock_connection._conn.__enter__.return_value = self.mock_connection._conn
             self.mock_connection._conn.remote_settings.max_concurrent_streams = 500
             mock_connection_constructor.return_value = self.mock_connection
-            self.client = APNsClient(cert_file=None)
+            self.client = APNsClient(credentials=None)
 
     @contextlib.contextmanager
     def mock_get_response(self, stream_id):

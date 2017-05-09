@@ -31,9 +31,10 @@ class Credentials(object):
 
 # Credentials subclass for certificate authentication
 class CertificateCredentials(Credentials):
-    def __init__(self, cert_file, password=None):
-        ssl_context = init_context()
-        ssl_context.load_cert_chain(cert_file, password=password)
+    def __init__(self, cert_file=None, password=None, cert_chain=None):
+        ssl_context = init_context(cert=cert_file, cert_password=password)
+        if cert_chain:
+            ssl_context.load_cert_chain(cert_chain)
         super(CertificateCredentials, self).__init__(ssl_context)
 
 

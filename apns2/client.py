@@ -48,19 +48,22 @@ class APNsClient(object):
         self._connection = self.__credentials.create_connection(server, port,
                                                                 proto)
 
-    def send_notification(self, token_hex, notification, topic, priority=NotificationPriority.Immediate,
+    def send_notification(self, token_hex, notification, topic=None, priority=NotificationPriority.Immediate,
                           expiration=None, collapse_id=None):
         stream_id = self.send_notification_async(token_hex, notification, topic, priority, expiration, collapse_id)
         result = self.get_notification_result(stream_id)
         if result != 'Success':
             raise exception_class_for_reason(result)
 
-    def send_notification_async(self, token_hex, notification, topic, priority=NotificationPriority.Immediate,
+    def send_notification_async(self, token_hex, notification, topic=None, priority=NotificationPriority.Immediate,
                                 expiration=None, collapse_id=None):
         json_str = json.dumps(notification.dict(), cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':'))
         json_payload = json_str.encode('utf-8')
 
-        headers = {'apns-topic': topic}
+        headers = {}
+        if topic is not None:
+            headers['apns-topic'] = topic
+
         if priority != DEFAULT_APNS_PRIORITY:
             headers['apns-priority'] = priority.value
 
@@ -87,7 +90,8 @@ class APNsClient(object):
                 data = json.loads(raw_data)
                 return data['reason']
 
-    def send_notification_batch(self, notifications, topic, priority=NotificationPriority.Immediate, expiration=None, collapse_id=None):
+    def send_notification_batch(self, notifications, topic=None, priority=NotificationPriority.Immediate,
+                                expiration=None, collapse_id=None):
         '''
         Send a notification to a list of tokens in batch. Instead of sending a synchronous request
         for each token, send multiple requests concurrently. This is done on the same connection,

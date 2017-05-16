@@ -9,7 +9,6 @@ import pprint
 import random
 from functools import partial
 
-from tornado import gen
 from tornado.ioloop import PeriodicCallback
 from http2 import SimpleAsyncHTTP2Client
 import jwt
@@ -20,9 +19,16 @@ NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 
 class APNsClient(object):
-    def __init__(self, key_file=None, teams_data=None, max_connections=3):
+
+    def __init__(self, key_file=None, teams_data=None, server=None, port=None, max_connections=3):
         self._header_format = 'bearer %s'
         self.__url_pattern = '/3/device/{token}'
+
+        if server:
+            self.server = server
+        else:
+            self.server = None
+        self.port = port or 443
 
         self._jwt_expire_interval = 3000  # 50 minuts
         self._teams = {}
@@ -64,16 +70,17 @@ class APNsClient(object):
         return random.choice(pool)
 
     def _init_client(self, sandbox, client_name):
-        server = 'api.development.push.apple.com' if sandbox else 'api.push.apple.com'
-        port = 443
-
+        if self.server:
+            server = self.server
+        else:
+            server = 'api.development.push.apple.com' if sandbox else 'api.push.apple.com'
         return SimpleAsyncHTTP2Client(
             host=server,
-            port=port,
+            port=self.port,
             secure=True,
             enable_push=True,
-            connect_timeout=5,
-            request_timeout=5,
+            connect_timeout=20,
+            request_timeout=20,
             max_streams=1000,
             http_client_key=client_name
         )
@@ -134,10 +141,9 @@ class APNsClient(object):
 
         return headers
 
-    @gen.coroutine
     def send_push(self, token, topic, notification, sandbox=False, priority=NOTIFICATION_PRIORITY['immediate'], expiration=None, cb=None):
         url = self.__url_pattern.format(token=token)
         json_payload = self.prepare_payload(notification)
         headers = self.prepare_headers(priority, topic, expiration)
 
-        yield self.get_conn(topic, sandbox).fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)
+        return self.get_conn(topic, sandbox).fetch(url, method='POST', body=json_payload, headers=headers, callback=cb, raise_error=False)

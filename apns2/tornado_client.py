@@ -6,6 +6,7 @@ import time
 import itertools
 import logging
 import pprint
+import random
 from functools import partial
 
 from tornado.ioloop import PeriodicCallback
@@ -18,7 +19,8 @@ NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 
 class APNsClient(object):
-    def __init__(self, key_file=None, teams_data=None, server=None, port=None):
+
+    def __init__(self, key_file=None, teams_data=None, server=None, port=None, max_connections=3):
         self._header_format = 'bearer %s'
         self.__url_pattern = '/3/device/{token}'
 
@@ -30,6 +32,7 @@ class APNsClient(object):
 
         self._jwt_expire_interval = 3000  # 50 minuts
         self._teams = {}
+        self.max_connections = max_connections
 
         self.configure(key_file, teams_data)
 
@@ -57,11 +60,14 @@ class APNsClient(object):
                 raise Exception('Team %s is not default and has no bundles: %s', team_name, data)
 
     def get_conn(self, app_bundle_id, sandbox):
-        if not self._get_team(app_bundle_id)['conns'].get(sandbox):
-            client_name = "{}_{}".format(self._get_team(app_bundle_id)['NAME'], sandbox)
-            self._get_team(app_bundle_id)['conns'][sandbox] = self._init_client(sandbox, client_name)
+        team = self._get_team(app_bundle_id)
+        pool = team['conns'].setdefault(sandbox,[])
+        if not len(pool):
+            for i in range(self.max_connections):
+                client_name = "{}_{}_{}".format(team['NAME'], sandbox, i)
+                pool.append(self._init_client(sandbox, client_name))
 
-        return self._get_team(app_bundle_id)['conns'][sandbox]
+        return random.choice(pool)
 
     def _init_client(self, sandbox, client_name):
         if self.server:

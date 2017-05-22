@@ -14,6 +14,7 @@ class NotificationPriority(Enum):
     Immediate = '10'
     Delayed = '5'
 
+
 RequestStream = collections.namedtuple('RequestStream', ['stream_id', 'token'])
 Notification = collections.namedtuple('Notification', ['token', 'payload'])
 
@@ -31,7 +32,8 @@ class APNsClient(object):
     DEFAULT_PORT = 443
     ALTERNATIVE_PORT = 2197
 
-    def __init__(self, credentials, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None, password=None):
+    def __init__(self, credentials, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None,
+                 password=None):
         if credentials is None or isinstance(credentials, str):
             self.__credentials = CertificateCredentials(credentials, password)
         else:
@@ -45,8 +47,7 @@ class APNsClient(object):
     def _init_connection(self, use_sandbox, use_alternative_port, proto):
         server = self.SANDBOX_SERVER if use_sandbox else self.LIVE_SERVER
         port = self.ALTERNATIVE_PORT if use_alternative_port else self.DEFAULT_PORT
-        self._connection = self.__credentials.create_connection(server, port,
-                                                                proto)
+        self._connection = self.__credentials.create_connection(server, port, proto)
 
     def send_notification(self, token_hex, notification, topic=None, priority=NotificationPriority.Immediate,
                           expiration=None, collapse_id=None):
@@ -92,7 +93,7 @@ class APNsClient(object):
 
     def send_notification_batch(self, notifications, topic=None, priority=NotificationPriority.Immediate,
                                 expiration=None, collapse_id=None):
-        '''
+        """
         Send a notification to a list of tokens in batch. Instead of sending a synchronous request
         for each token, send multiple requests concurrently. This is done on the same connection,
         using HTTP/2 streams (one request per stream).
@@ -104,7 +105,7 @@ class APNsClient(object):
         The function returns a dictionary mapping each token to its result. The result is "Success"
         if the token was sent successfully, or the string returned by APNs in the 'reason' field of
         the response, if the token generated an error.
-        '''
+        """
         notification_iterator = iter(notifications)
         next_notification = next(notification_iterator, None)
         # Make sure we're connected to APNs, so that we receive and process the server's SETTINGS
@@ -171,10 +172,10 @@ class APNsClient(object):
             self.__max_concurrent_streams = max_concurrent_streams
 
     def connect(self):
-        '''
+        """
         Establish a connection to APNs. If already connected, the function does nothing. If the
         connection fails, the function retries up to MAX_CONNECTION_RETRIES times.
-        '''
+        """
         retries = 0
         while retries < MAX_CONNECTION_RETRIES:
             try:

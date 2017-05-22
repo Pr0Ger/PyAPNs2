@@ -110,7 +110,7 @@ class InvalidProviderToken(APNsException):
 
 
 class MissingProviderToken(APNsException):
-    """No provider certificate was used to connect to APNs and Authorization header was missing or no provider token 
+    """No provider certificate was used to connect to APNs and Authorization header was missing or no provider token
     was specified. """
     pass
 

@@ -6,6 +6,8 @@
 
 from unittest import TestCase, main
 
+from freezegun import freeze_time
+
 import time
 
 from apns2.credentials import TokenCredentials
@@ -28,12 +30,14 @@ class TokenCredentialsTestCase(TestCase):
                                              self.team_id)
         self.lasting_header = self.normal_creds.get_authorization_header(
             self.topics[0])
-        self.expiring_creds = \
-            TokenCredentials(self.key_path, self.key_id,
-                             self.team_id,
-                             token_lifetime=self.token_lifetime)
-        self.expiring_header = self.expiring_creds.get_authorization_header(
-            self.topics[0])
+
+        with freeze_time('2012-01-14'):
+            self.expiring_creds = \
+                TokenCredentials(self.key_path, self.key_id,
+                                 self.team_id,
+                                 token_lifetime=self.token_lifetime)
+            self.expiring_header = self.expiring_creds.get_authorization_header(
+                self.topics[0])
 
     def test_create_multiple_topics(self):
         h1 = self.normal_creds.get_authorization_header(self.topics[0])

@@ -10,16 +10,14 @@ DEFAULT_TOKEN_ENCRYPTION_ALGORITHM = 'ES256'
 
 # Abstract Base class. This should not be instantiated directly.
 class Credentials(object):
-    def __init__(self, ssl_context=None, proxy_host=None, proxy_port=None):
-        self.proxy_host = proxy_host
-        self.proxy_port = proxy_port
+    def __init__(self, ssl_context=None):
         self.__ssl_context = ssl_context
 
     # Creates a connection with the credentials, if available or necessary.
-    def create_connection(self, server, port, proto):
+    def create_connection(self, server, port, proto, proxy_host=None, proxy_port=None):
         # self.__ssl_context may be none, and that's fine.
         return HTTP20Connection(server, port, ssl_context=self.__ssl_context, force_proto=proto or 'h2',
-                                proxy_host=self.proxy_host, proxy_port=self.proxy_port)
+                                proxy_host=proxy_host, proxy_port=proxy_port)
 
     def get_authorization_header(self, topic):
         return None
@@ -27,18 +25,18 @@ class Credentials(object):
 
 # Credentials subclass for certificate authentication
 class CertificateCredentials(Credentials):
-    def __init__(self, cert_file=None, password=None, cert_chain=None, proxy_host=None, proxy_port=None):
+    def __init__(self, cert_file=None, password=None, cert_chain=None):
         ssl_context = init_context(cert=cert_file, cert_password=password)
         if cert_chain:
             ssl_context.load_cert_chain(cert_chain)
-        super(CertificateCredentials, self).__init__(ssl_context, proxy_host=proxy_host, proxy_port=proxy_port)
+        super(CertificateCredentials, self).__init__(ssl_context)
 
 
 # Credentials subclass for JWT token based authentication
 class TokenCredentials(Credentials):
     def __init__(self, auth_key_path, auth_key_id, team_id,
                  encryption_algorithm=DEFAULT_TOKEN_ENCRYPTION_ALGORITHM,
-                 token_lifetime=DEFAULT_TOKEN_LIFETIME, proxy_host=None, proxy_port=None):
+                 token_lifetime=DEFAULT_TOKEN_LIFETIME):
         self.__auth_key = self._get_signing_key(auth_key_path)
         self.__auth_key_id = auth_key_id
         self.__team_id = team_id
@@ -49,7 +47,7 @@ class TokenCredentials(Credentials):
         self.__topicTokens = {}
 
         # Use the default constructor because we don't have an SSL context
-        super(TokenCredentials, self).__init__(proxy_host=proxy_host, proxy_port=proxy_port)
+        super(TokenCredentials, self).__init__()
 
     def get_tokens(self):
         return [val[1] for val in self.__topicTokens]

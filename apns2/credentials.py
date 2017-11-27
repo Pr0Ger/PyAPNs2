@@ -60,7 +60,7 @@ class TokenCredentials(Credentials):
 
     @staticmethod
     def _is_expired_token(issue_date):
-        return time.time() < issue_date + DEFAULT_TOKEN_LIFETIME
+        return time.time() > issue_date + DEFAULT_TOKEN_LIFETIME
 
     @staticmethod
     def _get_signing_key(key_path):

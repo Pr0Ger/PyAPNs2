@@ -183,6 +183,8 @@ class APNsClient(object):
                 logger.info('Connected to APNs')
                 return
             except Exception:  # pylint: disable=broad-except
+                # close the connnection, otherwise next connect() call would do nothing
+                self._connection.close()
                 retries += 1
                 logger.exception('Failed connecting to APNs (attempt %s of %s)', retries, MAX_CONNECTION_RETRIES)
 

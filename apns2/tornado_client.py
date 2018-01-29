@@ -20,7 +20,7 @@ NOTIFICATION_PRIORITY = dict(immediate='10', delayed='5')
 
 class APNsClient(object):
 
-    def __init__(self, key_file=None, teams_data=None, server=None, port=None, max_connections=3):
+    def __init__(self, key_file=None, teams_data=None, server=None, port=None, max_connections=3, conn_config=None):
         self._header_format = 'bearer %s'
         self.__url_pattern = '/3/device/{token}'
 
@@ -35,6 +35,7 @@ class APNsClient(object):
         self.max_connections = max_connections
 
         self.configure(key_file, teams_data)
+        self.conn_config = conn_config
 
     def configure(self, key_file, teams_data):
         """ Настройка ID команд APNS
@@ -82,7 +83,8 @@ class APNsClient(object):
             connect_timeout=20,
             request_timeout=20,
             max_streams=1000,
-            http_client_key=client_name
+            http_client_key=client_name,
+            conn_config=self.conn_config
         )
 
     def _get_team(self, topic):

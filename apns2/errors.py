@@ -128,6 +128,11 @@ class MethodNotAllowed(InternalException):
 class Unregistered(APNsException):
     """The device token is inactive for the specified topic."""
 
+    def __init__(self, timestamp=None):
+        super().__init__()
+
+        self.timestamp = timestamp
+
 
 class PayloadTooLarge(BadPayloadException):
     """The message payload was too large. The maximum payload size is 4096 bytes."""

@@ -54,7 +54,11 @@ class APNsClient(object):
         stream_id = self.send_notification_async(token_hex, notification, topic, priority, expiration, collapse_id)
         result = self.get_notification_result(stream_id)
         if result != 'Success':
-            raise exception_class_for_reason(result)
+            if isinstance(result, tuple):
+                reason, info = result
+                raise exception_class_for_reason(reason)(info)
+            else:
+                raise exception_class_for_reason(result)
 
     def send_notification_async(self, token_hex, notification, topic=None, priority=NotificationPriority.Immediate,
                                 expiration=None, collapse_id=None):
@@ -83,13 +87,20 @@ class APNsClient(object):
         return stream_id
 
     def get_notification_result(self, stream_id):
+        """
+        Get result for specified stream
+        The function returns: 'Success' or 'failure reason' or ('Unregistered', timestamp)
+        """
         with self._connection.get_response(stream_id) as response:
             if response.status == 200:
                 return 'Success'
             else:
                 raw_data = response.read().decode('utf-8')
                 data = json.loads(raw_data)
-                return data['reason']
+                if response.status == 410:
+                    return data['reason'], data['timestamp']
+                else:
+                    return data['reason']
 
     def send_notification_batch(self, notifications, topic=None, priority=NotificationPriority.Immediate,
                                 expiration=None, collapse_id=None):

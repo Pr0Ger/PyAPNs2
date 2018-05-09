@@ -129,7 +129,7 @@ class Unregistered(APNsException):
     """The device token is inactive for the specified topic."""
 
     def __init__(self, timestamp=None):
-        super().__init__()
+        super(Unregistered, self).__init__()
 
         self.timestamp = timestamp
 

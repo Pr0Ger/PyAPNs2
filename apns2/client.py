@@ -33,21 +33,21 @@ class APNsClient(object):
     ALTERNATIVE_PORT = 2197
 
     def __init__(self, credentials, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None,
-                 password=None, proxy_host=None, proxy_port=None, heartbeat=None):
+                 password=None, proxy_host=None, proxy_port=None, heartbeat_period=None):
         if credentials is None or isinstance(credentials, str):
             self.__credentials = CertificateCredentials(credentials, password)
         else:
             self.__credentials = credentials
-        self._init_connection(use_sandbox, use_alternative_port, proto, proxy_host, proxy_port, heartbeat)
+        self._init_connection(use_sandbox, use_alternative_port, proto, proxy_host, proxy_port, heartbeat_period)
 
         self.__json_encoder = json_encoder
         self.__max_concurrent_streams = None
         self.__previous_server_max_concurrent_streams = None
 
-    def _init_connection(self, use_sandbox, use_alternative_port, proto, proxy_host, proxy_port, heartbeat):
+    def _init_connection(self, use_sandbox, use_alternative_port, proto, proxy_host, proxy_port, heartbeat_period):
         server = self.SANDBOX_SERVER if use_sandbox else self.LIVE_SERVER
         port = self.ALTERNATIVE_PORT if use_alternative_port else self.DEFAULT_PORT
-        self._connection = self.__credentials.create_connection(server, port, proto, proxy_host, proxy_port, heartbeat)
+        self._connection = self.__credentials.create_connection(server, port, proto, proxy_host, proxy_port, heartbeat_period)
 
     def send_notification(self, token_hex, notification, topic=None, priority=NotificationPriority.Immediate,
                           expiration=None, collapse_id=None):

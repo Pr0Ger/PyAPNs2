@@ -14,10 +14,34 @@ class Credentials(object):
         self.__ssl_context = ssl_context
 
     # Creates a connection with the credentials, if available or necessary.
-    def create_connection(self, server, port, proto, proxy_host=None, proxy_port=None):
+    def create_connection(self, server, port, proto,
+                          proxy_host=None, proxy_port=None, heartbeat=None):
         # self.__ssl_context may be none, and that's fine.
-        return HTTP20Connection(server, port, ssl_context=self.__ssl_context, force_proto=proto or 'h2',
-                                secure=True, proxy_host=proxy_host, proxy_port=proxy_port)
+        connection = HTTP20Connection(server, port, ssl_context=self.__ssl_context,
+                                      force_proto=proto or 'h2',
+                                      secure=True, proxy_host=proxy_host,
+                                      proxy_port=proxy_port)
+
+        if heartbeat:
+            import weakref
+            from threading import Thread
+
+            conn_ref = weakref.ref(connection)
+
+            def watchdog():
+                while True:
+                    conn = conn_ref()
+                    if conn is None:
+                        break
+
+                    conn.ping('-' * 8)
+                    time.sleep(heartbeat)
+
+            thread = Thread(target=watchdog)
+            thread.setDaemon(True)
+            thread.start()
+
+        return connection
 
     def get_authorization_header(self, topic):
         return None

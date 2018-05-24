@@ -15,31 +15,12 @@ class Credentials(object):
 
     # Creates a connection with the credentials, if available or necessary.
     def create_connection(self, server, port, proto,
-                          proxy_host=None, proxy_port=None, heartbeat_period=None):
+                          proxy_host=None, proxy_port=None):
         # self.__ssl_context may be none, and that's fine.
         connection = HTTP20Connection(server, port, ssl_context=self.__ssl_context,
                                       force_proto=proto or 'h2',
                                       secure=True, proxy_host=proxy_host,
                                       proxy_port=proxy_port)
-
-        if heartbeat_period:
-            import weakref
-            from threading import Thread
-
-            conn_ref = weakref.ref(connection)
-
-            def watchdog():
-                while True:
-                    conn = conn_ref()
-                    if conn is None:
-                        break
-
-                    conn.ping('-' * 8)
-                    time.sleep(heartbeat_period)
-
-            thread = Thread(target=watchdog)
-            thread.setDaemon(True)
-            thread.start()
 
         return connection
 

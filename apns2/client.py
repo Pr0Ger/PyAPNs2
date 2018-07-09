@@ -1,7 +1,10 @@
 import collections
 import json
 import logging
+import time
+import weakref
 from enum import Enum
+from threading import Thread
 
 from .errors import ConnectionFailed, exception_class_for_reason
 
@@ -33,12 +36,15 @@ class APNsClient(object):
     ALTERNATIVE_PORT = 2197
 
     def __init__(self, credentials, use_sandbox=False, use_alternative_port=False, proto=None, json_encoder=None,
-                 password=None, proxy_host=None, proxy_port=None):
+                 password=None, proxy_host=None, proxy_port=None, heartbeat_period=None):
         if credentials is None or isinstance(credentials, str):
             self.__credentials = CertificateCredentials(credentials, password)
         else:
             self.__credentials = credentials
         self._init_connection(use_sandbox, use_alternative_port, proto, proxy_host, proxy_port)
+
+        if heartbeat_period:
+            self._start_heartbeat(heartbeat_period)
 
         self.__json_encoder = json_encoder
         self.__max_concurrent_streams = None
@@ -48,6 +54,22 @@ class APNsClient(object):
         server = self.SANDBOX_SERVER if use_sandbox else self.LIVE_SERVER
         port = self.ALTERNATIVE_PORT if use_alternative_port else self.DEFAULT_PORT
         self._connection = self.__credentials.create_connection(server, port, proto, proxy_host, proxy_port)
+
+    def _start_heartbeat(self, heartbeat_period):
+        conn_ref = weakref.ref(self._connection)
+
+        def watchdog():
+            while True:
+                conn = conn_ref()
+                if conn is None:
+                    break
+
+                conn.ping('-' * 8)
+                time.sleep(heartbeat_period)
+
+        thread = Thread(target=watchdog)
+        thread.setDaemon(True)
+        thread.start()
 
     def send_notification(self, token_hex, notification, topic=None, priority=NotificationPriority.Immediate,
                           expiration=None, collapse_id=None):

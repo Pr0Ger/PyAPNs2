@@ -47,7 +47,7 @@ class PayloadAlert(object):
 class Payload(object):
     def __init__(self, alert=None, badge=None, sound=None,
                  content_available=False, mutable_content=False,
-                 category=None, url_args=None, custom=None):
+                 category=None, url_args=None, custom=None, thread_id=None):
         self.alert = alert
         self.badge = badge
         self.sound = sound
@@ -56,6 +56,7 @@ class Payload(object):
         self.category = category
         self.url_args = url_args
         self.custom = custom
+        self.thread_id = thread_id
 
     def __repr__(self):
         return repr(self.dict()).decode("unicode-escape")
@@ -81,6 +82,8 @@ class Payload(object):
             result['aps']['category'] = self.category
         if self.url_args is not None:
             result['aps']['url-args'] = self.url_args
+        if self.thread_id is not None:
+            result['aps']['thread-id'] = "{}".format(self.thread_id)
         if self.custom is not None:
             result.update(self.custom)
 

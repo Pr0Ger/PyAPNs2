@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from builtins import next
+from builtins import object
 import collections
 import json
 import logging

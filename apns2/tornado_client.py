@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from builtins import range
+from builtins import object
 from json import dumps
 import time
 import itertools
@@ -42,7 +44,7 @@ class APNsClient(object):
         Args:
             teams_data: dict
         """
-        for team_name, data in teams_data.iteritems():
+        for team_name, data in teams_data.items():
             if not data.get('NAME'):
                 data['NAME'] = team_name
 

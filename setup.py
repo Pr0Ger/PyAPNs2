@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-dependencies = ['PyJWT']
+dependencies = ['PyJWT', 'future']
 
 try:
     # noinspection PyUnresolvedReferences

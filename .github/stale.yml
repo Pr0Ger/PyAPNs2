@@ -8,3 +8,6 @@ staleLabel: stale
 markComment: >
   This issue has been automatically marked as stale because it has not had
   recent activity. It will be closed if no further activity occurs.
+
+# Limit to only `issues` or `pulls`
+only: issues

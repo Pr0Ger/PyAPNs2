@@ -35,7 +35,7 @@ client.send_notification(token_hex, payload, topic)
 To develop PyAPNs2, check out the code and install dependencies. It's recommended to use a virtualenv to isolate dependencies:
 ```shell
 # Clone the source code.
-git clone https://github.com/Pr0ger/PyAPNs2.git
+git clone https://github.com/Pr0Ger/PyAPNs2.git
 cd PyAPNs2
 # Create a virtualenv and install dependencies.
 virtualenv venv
@@ -51,8 +51,9 @@ python -m unittest discover test
 
 You can use `tox` for running tests with all supported Python versions:
 ```shell
-pyenv install 2.7.13 && pyenv install 3.4.6 && pyenv install 3.5.3 & pyenv install 3.6.0
-pyenv local 3.6.0 3.5.3 3.4.6 2.7.13
+pyenv install 2.7.15; pyenv install 3.4.9; pyenv install 3.5.6; pyenv install 3.6.7; pyenv install 3.7.1
+pyenv local 3.7.1 3.6.7 3.5.6 3.4.9 2.7.15
+pip install tox
 tox
 ```
 

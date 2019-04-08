@@ -4,7 +4,7 @@ local Pipeline(py_version) = {
   steps: [
     {
       name: "test",
-      image: "python:" + py_version + "-alpine",
+      image: "python:" + py_version,
       commands: [
         "pip install .",
         "pip install -r requirements-dev.txt",

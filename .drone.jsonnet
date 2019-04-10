@@ -20,4 +20,24 @@ local Pipeline(py_version) = {
   Pipeline("3.5"),
   Pipeline("3.6"),
   Pipeline("3.7"),
+  {
+    kind: "pipeline",
+    name: "upload release",
+    trigger: {
+      event: ['tag'],
+    },
+    steps: [
+      {
+        name: "publish",
+        image: "plugins/pypi",
+        settings: {
+          distributions: ["sdist", "bdist_wheel"],
+          username: "Pr0Ger",
+          password: {
+            from_secret: "pypi_password"
+          },
+        },
+      },
+    ],
+  },
 ]

@@ -5,6 +5,7 @@ local Pipeline(py_version) = {
     {
       name: "test",
       image: "python:" + py_version,
+      [if py_version == "2.7" then "failure" else null]: "ignore",
       commands: [
         "pip install .",
         "pip install -r requirements-dev.txt",

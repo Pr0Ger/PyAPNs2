@@ -25,7 +25,15 @@ local Pipeline(py_version) = {
     name: "upload release",
     trigger: {
       event: ['tag'],
+      status: ['success'],
     },
+    depends_on: [
+      # We are ignoring 2.7 since it's randomly fails because of certificate_transparency module
+      "tests (Python 3.4)",
+      "tests (Python 3.5)",
+      "tests (Python 3.6)",
+      "tests (Python 3.7)",
+    ],
     steps: [
       {
         name: "publish",

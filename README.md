@@ -30,7 +30,7 @@ notifications = [Notification(payload=payload, token=token_hex)]
 client.send_notification_batch(notifications=notifications, topic=topic)
 
 # To use token based authentication
-from apsn2.credentials import TokenCredentials
+from apns2.credentials import TokenCredentials
 
 auth_key_path = 'path/to/auth_key'
 auth_key_id = 'app_auth_key_id'

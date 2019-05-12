@@ -17,7 +17,6 @@ local Pipeline(py_version) = {
 
 [
   Pipeline("2.7"),
-  Pipeline("3.4"),
   Pipeline("3.5"),
   Pipeline("3.6"),
   Pipeline("3.7"),
@@ -30,7 +29,6 @@ local Pipeline(py_version) = {
     },
     depends_on: [
       # We are ignoring 2.7 since it's randomly fails because of certificate_transparency module
-      "tests (Python 3.4)",
       "tests (Python 3.5)",
       "tests (Python 3.6)",
       "tests (Python 3.7)",

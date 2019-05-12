@@ -5,7 +5,6 @@ local Pipeline(py_version) = {
     {
       name: "test",
       image: "python:" + py_version,
-      [if py_version == "2.7" then "failure" else null]: "ignore",
       commands: [
         "pip install .",
         "pip install -r requirements-dev.txt",
@@ -16,7 +15,6 @@ local Pipeline(py_version) = {
 };
 
 [
-  Pipeline("2.7"),
   Pipeline("3.5"),
   Pipeline("3.6"),
   Pipeline("3.7"),
@@ -28,7 +26,6 @@ local Pipeline(py_version) = {
       status: ['success'],
     },
     depends_on: [
-      # We are ignoring 2.7 since it's randomly fails because of certificate_transparency module
       "tests (Python 3.5)",
       "tests (Python 3.6)",
       "tests (Python 3.7)",

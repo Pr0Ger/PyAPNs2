@@ -39,13 +39,6 @@ class TokenCredentialsTestCase(TestCase):
             self.expiring_header = self.expiring_creds.get_authorization_header(
                 self.topics[0])
 
-    def test_create_multiple_topics(self):
-        h1 = self.normal_creds.get_authorization_header(self.topics[0])
-        self.assertEqual(len(self.normal_creds.get_tokens()), 1)
-        h2 = self.normal_creds.get_authorization_header(self.topics[1])
-        self.assertNotEqual(h1, h2)
-        self.assertEqual(len(self.normal_creds.get_tokens()), 2)
-
     def test_token_expiration(self):
         # As long as the token lifetime hasn't elapsed, this should work. To
         # be really careful, we should check how much time has elapsed to

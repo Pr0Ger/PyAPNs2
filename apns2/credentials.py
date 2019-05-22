@@ -44,13 +44,10 @@ class TokenCredentials(Credentials):
         self.__token_lifetime = token_lifetime
 
         # Dictionary of {topic: (issue time, ascii decoded token)}
-        self.__topicTokens = {}
+        self.__jwt_token = None
 
         # Use the default constructor because we don't have an SSL context
         super(TokenCredentials, self).__init__()
-
-    def get_tokens(self):
-        return [val[1] for val in self.__topicTokens]
 
     def get_authorization_header(self, topic):
         token = self._get_or_create_topic_token(topic)
@@ -70,7 +67,7 @@ class TokenCredentials(Credentials):
 
     def _get_or_create_topic_token(self, topic):
         # dict of topic to issue date and JWT token
-        token_pair = self.__topicTokens.get(topic)
+        token_pair = self.__jwt_token
         if token_pair is None or self._is_expired_token(token_pair[0]):
             # Create a new token
             issued_at = time.time()
@@ -86,7 +83,9 @@ class TokenCredentials(Credentials):
                                    algorithm=self.__encryption_algorithm,
                                    headers=headers).decode('ascii')
 
-            self.__topicTokens[topic] = (issued_at, jwt_token)
+            # Cache JWT token for later use. One JWT token per connection.
+            # https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_token-based_connection_to_apns
+            self.__jwt_token = (issued_at, jwt_token)
             return jwt_token
         else:
             return token_pair[1]

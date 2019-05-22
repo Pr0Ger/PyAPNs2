@@ -84,7 +84,7 @@ class TokenCredentials(Credentials):
                                    headers=headers).decode('ascii')
 
             # Cache JWT token for later use. One JWT token per connection.
-            # For more info see: https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_token-based_connection_to_apns#2943374
+            # https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_token-based_connection_to_apns
             self.__jwt_token = (issued_at, jwt_token)
             return jwt_token
         else:

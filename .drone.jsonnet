@@ -6,9 +6,8 @@ local Pipeline(py_version) = {
       name: "test",
       image: "python:" + py_version,
       commands: [
-        "pip install .",
-        "pip install -r requirements-dev.txt",
-        "nosetests"
+        "pip install .[tests]",
+        "pytest"
       ]
     }
   ]

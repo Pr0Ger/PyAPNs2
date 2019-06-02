@@ -54,19 +54,18 @@ cd PyAPNs2
 # Create a virtualenv and install dependencies.
 virtualenv venv
 . venv/bin/activate
-pip install -e .
+pip install -e .[tests]
 ```
 
 To run the tests:
 ```shell
-pip install -r requirements-dev.txt
-python -m unittest discover test
+pytest
 ```
 
 You can use `tox` for running tests with all supported Python versions:
 ```shell
-pyenv install 2.7.15; pyenv install 3.4.9; pyenv install 3.5.6; pyenv install 3.6.7; pyenv install 3.7.1
-pyenv local 3.7.1 3.6.7 3.5.6 3.4.9 2.7.15
+pyenv install 3.5.6; pyenv install 3.6.7; pyenv install 3.7.1
+pyenv local 3.7.1 3.6.7 3.5.6
 pip install tox
 tox
 ```

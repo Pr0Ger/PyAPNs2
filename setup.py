@@ -11,6 +11,12 @@ setup(
         'PyJWT>=1.4.0',
         'cryptography>=1.7.2',
     ],
+    extras_require={
+        "tests": [
+            'freezegun',
+            'pytest',
+        ],
+    },
     url='https://github.com/Pr0Ger/PyAPNs2',
     license='MIT',
     author='Sergey Petrov',

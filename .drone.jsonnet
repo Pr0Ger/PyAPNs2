@@ -20,10 +20,10 @@ local Pipeline(py_version) = {
     steps: [
       {
         name: "mypy",
-        image: "pr0ger/drone-mypy",
+        image: "pr0ger/drone-pylinters",
+        pull: "always",
         settings: {
-          strict: true,
-          package: "apns2",
+          linter: "mypy",
         },
       },
     ],

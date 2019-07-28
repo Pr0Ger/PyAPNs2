@@ -14,6 +14,20 @@ local Pipeline(py_version) = {
 };
 
 [
+  {
+    kind: "pipeline",
+    name: "linting",
+    steps: [
+      {
+        name: "mypy",
+        image: "pr0ger/drone-pylinters",
+        pull: "always",
+        settings: {
+          linter: "mypy",
+        },
+      },
+    ],
+  },
   Pipeline("3.5"),
   Pipeline("3.6"),
   Pipeline("3.7"),

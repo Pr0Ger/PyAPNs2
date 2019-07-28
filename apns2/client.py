@@ -43,7 +43,7 @@ class APNsClient(object):
                  json_encoder: Optional[Type[JSONEncoder]] = None, password: Optional[str] = None,
                  proxy_host: Optional[str] = None, proxy_port: Optional[int] = None,
                  heartbeat_period: Optional[float] = None) -> None:
-        if credentials is None or isinstance(credentials, str):
+        if isinstance(credentials, str):
             self.__credentials = CertificateCredentials(credentials, password)  # type: Credentials
         else:
             self.__credentials = credentials

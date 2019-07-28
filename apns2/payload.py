@@ -6,7 +6,7 @@ MAX_PAYLOAD_SIZE = 4096
 class PayloadAlert(object):
     def __init__(
             self,
-            title: str = None,
+            title: Optional[str] = None,
             title_localized_key: Optional[str] = None,
             title_localized_args: Optional[List[str]] = None,
             body: Optional[str] = None,

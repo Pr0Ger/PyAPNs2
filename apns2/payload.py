@@ -77,6 +77,10 @@ class Payload(object):
         self.mutable_content = mutable_content
         self.thread_id = thread_id
 
+        self.push_type = 'background'
+        if self.alert or self.badge is not None or self.sound is not None:
+            self.push_type = 'alert'
+
     def dict(self) -> Dict[str, Any]:
         result = {
             'aps': {}

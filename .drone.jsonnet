@@ -26,6 +26,13 @@ local Pipeline(py_version) = {
           linter: "mypy",
         },
       },
+      {
+        name: "pycodestyle",
+        image: "pr0ger/drone-pylinters",
+        settings: {
+          linter: "pycodestyle",
+        },
+      },
     ],
   },
   Pipeline("3.5"),

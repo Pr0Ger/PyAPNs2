@@ -1,8 +1,0 @@
-python-targets:
-  - 2
-  - 3
-ignore-paths:
-  - setup.py
-strictness: veryhigh
-pep8:
-  full: true

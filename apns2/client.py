@@ -38,12 +38,12 @@ class APNsClient(object):
     ALTERNATIVE_PORT = 2197
 
     def __init__(self,
-                 credentials: Union[Credentials, str],
+                 credentials: Union[Credentials, str, None],
                  use_sandbox: bool = False, use_alternative_port: bool = False, proto: Optional[str] = None,
                  json_encoder: Optional[Type[JSONEncoder]] = None, password: Optional[str] = None,
                  proxy_host: Optional[str] = None, proxy_port: Optional[int] = None,
                  heartbeat_period: Optional[float] = None) -> None:
-        if isinstance(credentials, str):
+        if credentials is None or isinstance(credentials, str):
             self.__credentials = CertificateCredentials(credentials, password)  # type: Credentials
         else:
             self.__credentials = credentials

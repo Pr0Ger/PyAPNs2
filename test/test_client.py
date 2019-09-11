@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from apns2.client import APNsClient, CertificateCredentials, CONCURRENT_STREAMS_SAFETY_MAXIMUM, Notification
+from apns2.client import APNsClient, Credentials, CONCURRENT_STREAMS_SAFETY_MAXIMUM, Notification
 from apns2.errors import ConnectionFailed
 from apns2.payload import Payload
 
@@ -26,7 +26,7 @@ def notifications(tokens):
 def client(mock_connection):
     with patch('apns2.credentials.HTTP20Connection') as mock_connection_constructor:
         mock_connection_constructor.return_value = mock_connection
-        return APNsClient(credentials=CertificateCredentials())
+        return APNsClient(credentials=Credentials())
 
 
 @pytest.fixture

@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='apns2',
-    version='0.6.0',
+    version='0.7.0',
     packages=['apns2'],
     install_requires=[
         'hyper>=0.7',

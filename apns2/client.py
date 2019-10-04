@@ -5,9 +5,8 @@ import time
 import typing
 import weakref
 from enum import Enum
-from json import JSONEncoder
 from threading import Thread
-from typing import Dict, Iterable, Optional, Tuple, Type, Union
+from typing import Dict, Iterable, Optional, Tuple, Union
 
 from .credentials import CertificateCredentials, Credentials
 from .errors import ConnectionFailed, exception_class_for_reason
@@ -50,7 +49,7 @@ class APNsClient(object):
     def __init__(self,
                  credentials: Union[Credentials, str],
                  use_sandbox: bool = False, use_alternative_port: bool = False, proto: Optional[str] = None,
-                 json_encoder: Optional[Type[JSONEncoder]] = None, password: Optional[str] = None,
+                 json_encoder: Optional[type] = None, password: Optional[str] = None,
                  proxy_host: Optional[str] = None, proxy_port: Optional[int] = None,
                  heartbeat_period: Optional[float] = None) -> None:
         if isinstance(credentials, str):

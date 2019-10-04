@@ -2,11 +2,12 @@ import collections
 import json
 import logging
 import time
+import typing
 import weakref
 from enum import Enum
 from json import JSONEncoder
 from threading import Thread
-from typing import Deque, Dict, Iterable, Optional, Tuple, Type, Union
+from typing import Dict, Iterable, Optional, Tuple, Type, Union
 
 from .credentials import CertificateCredentials, Credentials
 from .errors import ConnectionFailed, exception_class_for_reason
@@ -185,7 +186,7 @@ class APNsClient(object):
         self.connect()
 
         results = {}
-        open_streams = collections.deque()  # type: Deque[RequestStream]
+        open_streams = collections.deque()  # type: typing.Deque[RequestStream]
         # Loop on the tokens, sending as many requests as possible concurrently to APNs.
         # When reaching the maximum concurrent streams limit, wait for a response before sending
         # another request.

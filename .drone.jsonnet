@@ -38,6 +38,7 @@ local Pipeline(py_version) = {
   Pipeline("3.5"),
   Pipeline("3.6"),
   Pipeline("3.7"),
+  Pipeline("3.8"),
   {
     kind: "pipeline",
     name: "upload release",
@@ -49,6 +50,7 @@ local Pipeline(py_version) = {
       "tests (Python 3.5)",
       "tests (Python 3.6)",
       "tests (Python 3.7)",
+      "tests (Python 3.8)",
     ],
     steps: [
       {

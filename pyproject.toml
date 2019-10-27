@@ -1,0 +1,30 @@
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool]
+[tool.poetry]
+name = "apns2"
+version = "0.7.1"
+description = "A python library for interacting with the Apple Push Notification Service via HTTP/2 protocol"
+license = "MIT"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Software Development :: Libraries"
+]
+authors = ["Sergey Petrov <me@pr0ger.prg>"]
+
+[tool.poetry.dependencies]
+python = ">=3.5"
+cryptography = ">=1.7.2"
+hyper = ">=0.7"
+pyjwt = ">=1.4.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+freezegun = "*"

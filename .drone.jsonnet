@@ -6,8 +6,9 @@ local Pipeline(py_version) = {
       name: "test",
       image: "python:" + py_version,
       commands: [
-        "pip install .[tests]",
-        "pytest"
+        "pip install poetry",
+        "poetry install -v",
+        "poetry run pytest"
       ]
     }
   ]

@@ -35,7 +35,7 @@ from apns2.credentials import TokenCredentials
 auth_key_path = 'path/to/auth_key'
 auth_key_id = 'app_auth_key_id'
 team_id = 'app_team_id'
-token_credentials = TokensCredentials(auth_key_path=auth_key_path, auth_key_id=auth_key_id, team_id=team_id)
+token_credentials = TokenCredentials(auth_key_path=auth_key_path, auth_key_id=auth_key_id, team_id=team_id)
 client = APNsClient(credentials=token_credentials, use_sandbox=False)
 client.send_notification_batch(notifications=notifications, topic=topic)
 ```

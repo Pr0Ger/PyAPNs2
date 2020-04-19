@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 class APNsClient(object):
-    SANDBOX_SERVER = 'api.sandbox.push.apple.com'
+    SANDBOX_SERVER = 'api.development.push.apple.com'
     LIVE_SERVER = 'api.push.apple.com'
 
     DEFAULT_PORT = 443

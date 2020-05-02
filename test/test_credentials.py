@@ -14,17 +14,24 @@ TOPIC = 'com.example.first_app'
 
 @pytest.fixture
 def token_credentials():
-    return TokenCredentials('test/eckey.pem', '1QBCDJ9RST', '3Z24IP123A')
+    return TokenCredentials(
+        auth_key_path='test/eckey.pem',
+        auth_key_id='1QBCDJ9RST',
+        team_id='3Z24IP123A',
+        token_lifetime=30,  # seconds
+    )
 
 
 def test_token_expiration(token_credentials):
-    # As long as the token lifetime hasn't elapsed, this should work. To
-    # be really careful, we should check how much time has elapsed to
-    # know if it fail. But, either way, we'd have to come up with a good
-    # lifetime for future tests...
+    with freeze_time('2012-01-14 12:00:00'):
+        header1 = token_credentials.get_authorization_header(TOPIC)
 
-    with freeze_time('2012-01-14'):
-        expiring_header = token_credentials.get_authorization_header(TOPIC)
+    # 20 seconds later, before expiration, same JWT
+    with freeze_time('2012-01-14 12:00:20'):
+        header2 = token_credentials.get_authorization_header(TOPIC)
+        assert header1 == header2
 
-    new_header = token_credentials.get_authorization_header(TOPIC)
-    assert expiring_header != new_header
+    # 35 seconds later, after expiration, new JWT
+    with freeze_time('2012-01-14 12:00:40'):
+        header3 = token_credentials.get_authorization_header(TOPIC)
+        assert header3 != header1

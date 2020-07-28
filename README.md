@@ -8,9 +8,9 @@ Python library for interacting with the Apple Push Notification service (APNs) v
 
 ## Installation
 
-Either download the source from GitHub or use easy_install:
+Either download the source from GitHub or use pip:
 
-    $ easy_install apns2
+    $ pip install apns2
 
 ## Sample usage
 

@@ -9,7 +9,7 @@ from hyper.tls import init_context  # type: ignore
 if TYPE_CHECKING:
     from hyper.ssl_compat import SSLContext  # type: ignore
 
-DEFAULT_TOKEN_LIFETIME = 3600
+DEFAULT_TOKEN_LIFETIME = 2700
 DEFAULT_TOKEN_ENCRYPTION_ALGORITHM = 'ES256'
 
 

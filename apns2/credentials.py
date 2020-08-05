@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING, Union
 
 import jwt
 
@@ -32,7 +32,7 @@ class Credentials(object):
 
 # Credentials subclass for certificate authentication
 class CertificateCredentials(Credentials):
-    def __init__(self, cert_file: Optional[str] = None, password: Optional[str] = None,
+    def __init__(self, cert_file: Union[Optional[str], Optional[Tuple[str, str]]] = None, password: Optional[str] = None,
                  cert_chain: Optional[str] = None) -> None:
         ssl_context = init_context(cert=cert_file, cert_password=password)
         if cert_chain:

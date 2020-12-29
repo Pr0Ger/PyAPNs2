@@ -35,7 +35,6 @@ local Pipeline(py_version) = {
       },
     ],
   },
-  Pipeline("3.5"),
   Pipeline("3.6"),
   Pipeline("3.7"),
   Pipeline("3.8"),
@@ -47,7 +46,6 @@ local Pipeline(py_version) = {
       status: ['success'],
     },
     depends_on: [
-      "tests (Python 3.5)",
       "tests (Python 3.6)",
       "tests (Python 3.7)",
       "tests (Python 3.8)",

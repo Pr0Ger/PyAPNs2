@@ -87,7 +87,7 @@ class TokenCredentials(Credentials):
             }
             jwt_token = jwt.encode(token_dict, self.__auth_key,
                                    algorithm=self.__encryption_algorithm,
-                                   headers=headers).decode('ascii')
+                                   headers=headers)
 
             # Cache JWT token for later use. One JWT token per connection.
             # https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/establishing_a_token-based_connection_to_apns

@@ -8,7 +8,7 @@ setup(
     packages=['apns2'],
     install_requires=[
         'hyper>=0.7',
-        'PyJWT>=1.4.0',
+        'PyJWT>=1.4.0,<2.0.0',
         'cryptography>=1.7.2',
     ],
     extras_require={

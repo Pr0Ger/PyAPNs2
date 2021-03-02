@@ -9,6 +9,9 @@ class PayloadAlert(object):
             title: Optional[str] = None,
             title_localized_key: Optional[str] = None,
             title_localized_args: Optional[List[str]] = None,
+            subtitle: Optional[str] = None,
+            subtitle_localized_key: Optional[str] = None,
+            subtitle_localized_args: Optional[List[str]] = None,
             body: Optional[str] = None,
             body_localized_key: Optional[str] = None,
             body_localized_args: Optional[List[str]] = None,
@@ -19,6 +22,9 @@ class PayloadAlert(object):
         self.title = title
         self.title_localized_key = title_localized_key
         self.title_localized_args = title_localized_args
+        self.subtitle = subtitle
+        self.subtitle_localized_key = subtitle_localized_key
+        self.subtitle_localized_args = subtitle_localized_args
         self.body = body
         self.body_localized_key = body_localized_key
         self.body_localized_args = body_localized_args
@@ -35,6 +41,13 @@ class PayloadAlert(object):
             result['title-loc-key'] = self.title_localized_key
         if self.title_localized_args:
             result['title-loc-args'] = self.title_localized_args
+
+        if self.subtitle:
+            result['subtitle'] = self.subtitle
+        if self.subtitle_localized_key:
+            result['subtitle-loc-key'] = self.subtitle_localized_key
+        if self.subtitle_localized_args:
+            result['subtitle-loc-args'] = self.subtitle_localized_args
 
         if self.body:
             result['body'] = self.body

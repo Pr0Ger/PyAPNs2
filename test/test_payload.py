@@ -7,8 +7,11 @@ from apns2.payload import Payload, PayloadAlert
 def payload_alert():
     return PayloadAlert(
         title='title',
-        title_localized_key='loc_k',
-        title_localized_args=['loc_a'],
+        title_localized_key='title_loc_k',
+        title_localized_args=['title_loc_a'],
+        subtitle='subtitle',
+        subtitle_localized_key='subtitle_loc_k',
+        subtitle_localized_args=['subtitle_loc_a'],
         body='body',
         body_localized_key='body_loc_k',
         body_localized_args=['body_loc_a'],
@@ -21,8 +24,11 @@ def payload_alert():
 def test_payload_alert(payload_alert):
     assert payload_alert.dict() == {
         'title': 'title',
-        'title-loc-key': 'loc_k',
-        'title-loc-args': ['loc_a'],
+        'title-loc-key': 'title_loc_k',
+        'title-loc-args': ['title_loc_a'],
+        'subtitle': 'subtitle',
+        'subtitle-loc-key': 'subtitle_loc_k',
+        'subtitle-loc-args': ['subtitle_loc_a'],
         'body': 'body',
         'loc-key': 'body_loc_k',
         'loc-args': ['body_loc_a'],
@@ -61,8 +67,11 @@ def test_payload_with_payload_alert(payload_alert):
         'aps': {
             'alert': {
                 'title': 'title',
-                'title-loc-key': 'loc_k',
-                'title-loc-args': ['loc_a'],
+                'title-loc-key': 'title_loc_k',
+                'title-loc-args': ['title_loc_a'],
+                'subtitle': 'subtitle',
+                'subtitle-loc-key': 'subtitle_loc_k',
+                'subtitle-loc-args': ['subtitle_loc_a'],
                 'body': 'body',
                 'loc-key': 'body_loc_k',
                 'loc-args': ['body_loc_a'],

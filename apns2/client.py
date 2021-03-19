@@ -16,23 +16,23 @@ from .payload import Payload
 
 
 class NotificationPriority(Enum):
-    Immediate = '10'
-    Delayed = '5'
+    IMMEDIATE = '10'
+    DELAYED = '5'
 
 
 class NotificationType(Enum):
-    Alert = 'alert'
-    Background = 'background'
-    VoIP = 'voip'
-    Complication = 'complication'
-    FileProvider = 'fileprovider'
+    ALERT = 'alert'
+    BACKGROUND = 'background'
+    VOIP = 'voip'
+    COMPLICATION = 'complication'
+    FILEPROVIDER = 'fileprovider'
     MDM = 'mdm'
 
 
 RequestStream = collections.namedtuple('RequestStream', ['stream_id', 'token'])
 Notification = collections.namedtuple('Notification', ['token', 'payload'])
 
-DEFAULT_APNS_PRIORITY = NotificationPriority.Immediate
+DEFAULT_APNS_PRIORITY = NotificationPriority.IMMEDIATE
 CONCURRENT_STREAMS_SAFETY_MAXIMUM = 1000
 MAX_CONNECTION_RETRIES = 3
 
@@ -88,7 +88,7 @@ class APNsClient(object):
         thread.start()
 
     def send_notification(self, token_hex: str, notification: Payload, topic: Optional[str] = None,
-                          priority: NotificationPriority = NotificationPriority.Immediate,
+                          priority: NotificationPriority = NotificationPriority.IMMEDIATE,
                           expiration: Optional[int] = None, collapse_id: Optional[str] = None) -> None:
         stream_id = self.send_notification_async(token_hex, notification, topic, priority, expiration, collapse_id)
         result = self.get_notification_result(stream_id)
@@ -100,7 +100,7 @@ class APNsClient(object):
                 raise exception_class_for_reason(result)
 
     def send_notification_async(self, token_hex: str, notification: Payload, topic: Optional[str] = None,
-                                priority: NotificationPriority = NotificationPriority.Immediate,
+                                priority: NotificationPriority = NotificationPriority.IMMEDIATE,
                                 expiration: Optional[int] = None, collapse_id: Optional[str] = None,
                                 push_type: Optional[NotificationType] = None) -> int:
         json_str = json.dumps(notification.dict(), cls=self.__json_encoder, ensure_ascii=False, separators=(',', ':'))
@@ -112,19 +112,19 @@ class APNsClient(object):
         if topic is not None:
             headers['apns-topic'] = topic
             if topic.endswith('.voip'):
-                inferred_push_type = NotificationType.VoIP.value
+                inferred_push_type = NotificationType.VOIP.value
             elif topic.endswith('.complication'):
-                inferred_push_type = NotificationType.Complication.value
+                inferred_push_type = NotificationType.COMPLICATION.value
             elif topic.endswith('.pushkit.fileprovider'):
-                inferred_push_type = NotificationType.FileProvider.value
+                inferred_push_type = NotificationType.FILEPROVIDER.value
             elif any([
                 notification.alert is not None,
                 notification.badge is not None,
                 notification.sound is not None,
             ]):
-                inferred_push_type = NotificationType.Alert.value
+                inferred_push_type = NotificationType.ALERT.value
             else:
-                inferred_push_type = NotificationType.Background.value
+                inferred_push_type = NotificationType.BACKGROUND.value
 
         if push_type:
             inferred_push_type = push_type.value
@@ -166,7 +166,7 @@ class APNsClient(object):
                     return data['reason']
 
     def send_notification_batch(self, notifications: Iterable[Notification], topic: Optional[str] = None,
-                                priority: NotificationPriority = NotificationPriority.Immediate,
+                                priority: NotificationPriority = NotificationPriority.IMMEDIATE,
                                 expiration: Optional[int] = None, collapse_id: Optional[str] = None,
                                 push_type: Optional[NotificationType] = None) -> Dict[str, Union[str, Tuple[str, str]]]:
         """

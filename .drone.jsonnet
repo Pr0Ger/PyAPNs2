@@ -20,7 +20,7 @@ local Pipeline(py_version) = {
     steps: [
       {
         name: "mypy",
-        image: "pr0ger/drone-pylinters",
+        image: "pr0ger/drone-pytools",
         pull: "always",
         settings: {
           linter: "mypy",
@@ -28,7 +28,7 @@ local Pipeline(py_version) = {
       },
       {
         name: "pycodestyle",
-        image: "pr0ger/drone-pylinters",
+        image: "pr0ger/drone-pytools",
         settings: {
           linter: "pycodestyle",
         },

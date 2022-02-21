@@ -23,7 +23,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.5"
+python = ">=3.7"
 cryptography = ">=1.7.2"
 hyper = ">=0.7"
 pyjwt = ">=2.0.0"

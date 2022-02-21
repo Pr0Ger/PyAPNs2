@@ -23,6 +23,7 @@ local Pipeline(py_version) = {
         name: "mypy",
         image: "pr0ger/baseimage:base.python-3.9",
         commands: [
+          "apk add openssl-dev",
           "poetry install",
           "mypy apns2"
         ]

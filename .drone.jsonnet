@@ -29,10 +29,10 @@ local Pipeline(py_version) = {
       },
       {
         name: "pycodestyle",
-        image: "pr0ger/drone-pytools",
-        settings: {
-          linter: "pycodestyle",
-        },
+        image: "pr0ger/baseimage:base.python-3.9",
+        commands: [
+          "pycodestyle apns2"
+        ]
       },
     ],
   },

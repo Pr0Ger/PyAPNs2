@@ -23,6 +23,7 @@ local Pipeline(py_version) = {
         name: "mypy",
         image: "pr0ger/baseimage:base.python-3.9-bullseye",
         commands: [
+          "poetry env use system",
           "poetry install",
           "mypy apns2"
         ]

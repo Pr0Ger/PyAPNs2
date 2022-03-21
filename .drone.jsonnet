@@ -21,16 +21,15 @@ local Pipeline(py_version) = {
     steps: [
       {
         name: "mypy",
-        image: "pr0ger/baseimage:base.python-3.9",
+        image: "pr0ger/baseimage:base.python-3.9-bullseye",
         commands: [
-          "apk add openssl-dev",
           "poetry install",
           "mypy apns2"
         ]
       },
       {
         name: "pycodestyle",
-        image: "pr0ger/baseimage:base.python-3.9",
+        image: "pr0ger/baseimage:base.python-3.9-bullseye",
         commands: [
           "pycodestyle apns2"
         ]

@@ -4,9 +4,8 @@ local Pipeline(py_version) = {
   steps: [
     {
       name: "test",
-      image: "python:" + py_version,
+      image: "pr0ger/baseimage:base.python-" + py_version + "-bullseye",
       commands: [
-        "pip install poetry",
         "poetry install -v",
         "poetry run pytest"
       ]

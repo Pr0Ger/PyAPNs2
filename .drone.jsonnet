@@ -22,8 +22,7 @@ local Pipeline(py_version) = {
         name: "mypy",
         image: "pr0ger/baseimage:base.python-3.9-bullseye",
         commands: [
-          "poetry config virtualenvs.create false",
-          "poetry install",
+          "poetry install -v",
           "mypy apns2"
         ]
       },
@@ -42,10 +41,7 @@ local Pipeline(py_version) = {
   {
     kind: "pipeline",
     name: "upload release",
-    trigger: {
-      event: ['tag'],
-      status: ['success'],
-    },
+
     depends_on: [
       "tests (Python 3.7)",
       "tests (Python 3.8)",
@@ -53,16 +49,13 @@ local Pipeline(py_version) = {
     ],
     steps: [
       {
-        name: "publish",
-        image: "plugins/pypi",
-        settings: {
-          distributions: ["sdist", "bdist_wheel"],
-          username: "Pr0Ger",
-          password: {
-            from_secret: "pypi_password"
-          },
-        },
+        name: "build",
+        image: "pr0ger/baseimage:base.python-3.9-bullseye",
+        commands: [
+          "poetry build -vvv"
+        ]
       },
+      
     ],
   },
 ]

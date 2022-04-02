@@ -66,7 +66,7 @@ local Pipeline(py_version) = {
           password: {
             from_secret: "pypi_password"
           },
-          skip_build: False,
+          skip_build: false,
         },
       },
     ],

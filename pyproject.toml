@@ -31,3 +31,30 @@ pyjwt = ">=2.0.0"
 [tool.poetry.dev-dependencies]
 pytest = "*"
 freezegun = "*"
+
+[tool.mypy]
+python_version = "3.7"
+strict = true
+
+[tool.pylint.design]
+max-args = 10
+max-attributes = 10
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.'messages control']
+disable = "missing-docstring, too-few-public-methods, locally-disabled, invalid-name"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py37, py38, py39
+isolated_build = True
+
+[testenv]
+whitelist_externals = poetry
+commands =
+    poetry install -v
+    poetry run pytest {posargs}
+"""

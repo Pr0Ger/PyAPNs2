@@ -4,10 +4,10 @@ local Pipeline(py_version) = {
   steps: [
     {
       name: "test",
-      image: "python:" + py_version,
+      image: "pr0ger/baseimage:base.python-" + py_version + "-bullseye",
       commands: [
-        "pip install .[tests]",
-        "pytest"
+        "poetry install -v",
+        "poetry run pytest"
       ]
     }
   ]
@@ -20,24 +20,24 @@ local Pipeline(py_version) = {
     steps: [
       {
         name: "mypy",
-        image: "pr0ger/drone-pytools",
-        pull: "always",
-        settings: {
-          linter: "mypy",
-        },
+        image: "pr0ger/baseimage:base.python-3.9-bullseye",
+        commands: [
+          "poetry install -v",
+          "mypy apns2"
+        ]
       },
       {
         name: "pycodestyle",
-        image: "pr0ger/drone-pytools",
-        settings: {
-          linter: "pycodestyle",
-        },
+        image: "pr0ger/baseimage:base.python-3.9-bullseye",
+        commands: [
+          "pycodestyle apns2"
+        ]
       },
     ],
   },
-  Pipeline("3.6"),
   Pipeline("3.7"),
   Pipeline("3.8"),
+  Pipeline("3.9"),
   {
     kind: "pipeline",
     name: "upload release",
@@ -46,20 +46,27 @@ local Pipeline(py_version) = {
       status: ['success'],
     },
     depends_on: [
-      "tests (Python 3.6)",
       "tests (Python 3.7)",
       "tests (Python 3.8)",
+      "tests (Python 3.9)",
     ],
     steps: [
+      {
+        name: "build",
+        image: "pr0ger/baseimage:base.python-3.9-bullseye",
+        commands: [
+          "poetry build -vvv"
+        ],
+      },
       {
         name: "publish",
         image: "plugins/pypi",
         settings: {
-          distributions: ["sdist", "bdist_wheel"],
           username: "Pr0Ger",
           password: {
             from_secret: "pypi_password"
           },
+          skip_build: false,
         },
       },
     ],

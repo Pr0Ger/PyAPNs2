@@ -1,0 +1,60 @@
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool]
+[tool.poetry]
+name = "apns2"
+version = "0.7.1"
+description = "A python library for interacting with the Apple Push Notification Service via HTTP/2 protocol"
+readme = 'README.md'
+authors = [
+    "Sergey Petrov <me@pr0ger.prg>"
+]
+license = "MIT"
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Software Development :: Libraries"
+]
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+cryptography = ">=1.7.2"
+hyper = ">=0.7"
+pyjwt = ">=2.0.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+freezegun = "*"
+
+[tool.mypy]
+python_version = "3.7"
+strict = true
+
+[tool.pylint.design]
+max-args = 10
+max-attributes = 10
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.'messages control']
+disable = "missing-docstring, too-few-public-methods, locally-disabled, invalid-name"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py37, py38, py39
+isolated_build = True
+
+[testenv]
+whitelist_externals = poetry
+commands =
+    poetry install -v
+    poetry run pytest {posargs}
+"""

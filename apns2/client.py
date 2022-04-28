@@ -89,8 +89,9 @@ class APNsClient(object):
 
     def send_notification(self, token_hex: str, notification: Payload, topic: Optional[str] = None,
                           priority: NotificationPriority = NotificationPriority.Immediate,
-                          expiration: Optional[int] = None, collapse_id: Optional[str] = None) -> None:
-        stream_id = self.send_notification_async(token_hex, notification, topic, priority, expiration, collapse_id)
+                          expiration: Optional[int] = None, collapse_id: Optional[str] = None,
+			  push_type: Optional[NotificationType] = None) -> None:
+        stream_id = self.send_notification_async(token_hex, notification, topic, priority, expiration, collapse_id, push_type)
         result = self.get_notification_result(stream_id)
         if result != 'Success':
             if isinstance(result, tuple):

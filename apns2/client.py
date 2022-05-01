@@ -253,6 +253,11 @@ class APNsClient(object):
         while retries < MAX_CONNECTION_RETRIES:
             # noinspection PyBroadException
             try:
+                if retries > 0:
+                    # HTTP20Connection._sock might get stuck, this line closes the HTTP20Connection manually to reset it
+                    # fully from the second retry onwards
+                    self._connection.close()
+
                 self._connection.connect()
                 logger.info('Connected to APNs')
                 return

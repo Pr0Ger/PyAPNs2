@@ -1,5 +1,6 @@
 import time
 from typing import Optional, Tuple, TYPE_CHECKING
+from base64 import b64decode
 
 import jwt
 
@@ -43,9 +44,13 @@ class CertificateCredentials(Credentials):
 # Credentials subclass for JWT token based authentication
 class TokenCredentials(Credentials):
     def __init__(self, auth_key_path: str, auth_key_id: str, team_id: str,
+                 auth_key_base64: Optional[str] = None,
                  encryption_algorithm: str = DEFAULT_TOKEN_ENCRYPTION_ALGORITHM,
                  token_lifetime: int = DEFAULT_TOKEN_LIFETIME) -> None:
-        self.__auth_key = self._get_signing_key(auth_key_path)
+        if auth_key_base64 is not None:
+            self.__auth_key = self._decode_signing_key(auth_key_base64)
+        else:
+            self.__auth_key = self._get_signing_key(auth_key_path)
         self.__auth_key_id = auth_key_id
         self.__team_id = team_id
         self.__encryption_algorithm = encryption_algorithm
@@ -69,6 +74,13 @@ class TokenCredentials(Credentials):
         if key_path:
             with open(key_path) as f:
                 secret = f.read()
+        return secret
+
+    @staticmethod
+    def _decode_signing_key(key_base64: str) -> str:
+        secret = ''
+        if key_base64:
+            secret = b64decode(key_base64).decode()
         return secret
 
     def _get_or_create_topic_token(self) -> str:

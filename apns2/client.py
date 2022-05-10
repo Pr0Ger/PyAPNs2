@@ -84,7 +84,7 @@ class APNsClient(object):
                 time.sleep(heartbeat_period)
 
         thread = Thread(target=watchdog)
-        thread.setDaemon(True)
+        thread.daemon = True
         thread.start()
 
     def send_notification(self, token_hex: str, notification: Payload, topic: Optional[str] = None,

@@ -3,41 +3,17 @@ from typing import Optional, Tuple, TYPE_CHECKING
 
 import jwt
 
-from hyper import HTTP20Connection  # type: ignore
-from hyper.tls import init_context  # type: ignore
-
-if TYPE_CHECKING:
-    from hyper.ssl_compat import SSLContext  # type: ignore
-
 DEFAULT_TOKEN_LIFETIME = 2700
 DEFAULT_TOKEN_ENCRYPTION_ALGORITHM = 'ES256'
 
 
 # Abstract Base class. This should not be instantiated directly.
 class Credentials(object):
-    def __init__(self, ssl_context: 'Optional[SSLContext]' = None) -> None:
+    def __init__(self):
         super().__init__()
-        self.__ssl_context = ssl_context
-
-    # Creates a connection with the credentials, if available or necessary.
-    def create_connection(self, server: str, port: int, proto: Optional[str], proxy_host: Optional[str] = None,
-                          proxy_port: Optional[int] = None) -> HTTP20Connection:
-        # self.__ssl_context may be none, and that's fine.
-        return HTTP20Connection(server, port, ssl_context=self.__ssl_context, force_proto=proto or 'h2',
-                                secure=True, proxy_host=proxy_host, proxy_port=proxy_port)
 
     def get_authorization_header(self, topic: Optional[str]) -> Optional[str]:
         return None
-
-
-# Credentials subclass for certificate authentication
-class CertificateCredentials(Credentials):
-    def __init__(self, cert_file: Optional[str] = None, password: Optional[str] = None,
-                 cert_chain: Optional[str] = None) -> None:
-        ssl_context = init_context(cert=cert_file, cert_password=password)
-        if cert_chain:
-            ssl_context.load_cert_chain(cert_chain)
-        super(CertificateCredentials, self).__init__(ssl_context)
 
 
 # Credentials subclass for JWT token based authentication

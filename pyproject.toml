@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool]
 [tool.poetry]
 name = "apns2"
-version = "0.7.1"
+version = "0.7.3"
 description = "A python library for interacting with the Apple Push Notification Service via HTTP/2 protocol"
 readme = 'README.md'
 authors = [
@@ -25,7 +25,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.7"
 cryptography = ">=1.7.2"
-hyper = ">=0.7"
+httpx = {version = ">=0.13.0", extras = ["http2"] }
 pyjwt = ">=2.0.0"
 
 [tool.poetry.dev-dependencies]

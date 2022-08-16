@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool]
 [tool.poetry]
 name = "apns2"
-version = "0.7.3"
+version = "0.7.1"
 description = "A python library for interacting with the Apple Push Notification Service via HTTP/2 protocol"
 readme = 'README.md'
 authors = [
@@ -19,6 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Software Development :: Libraries"
 ]
 
@@ -49,7 +50,7 @@ disable = "missing-docstring, too-few-public-methods, locally-disabled, invalid-
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py37, py38, py39
+envlist = py37, py38, py39, py310
 isolated_build = True
 
 [testenv]

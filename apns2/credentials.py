@@ -1,5 +1,6 @@
+import ssl
 import time
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple
 
 import jwt
 
@@ -9,11 +10,20 @@ DEFAULT_TOKEN_ENCRYPTION_ALGORITHM = 'ES256'
 
 # Abstract Base class. This should not be instantiated directly.
 class Credentials(object):
-    def __init__(self):
+    def __init__(self, ssl_context: Optional[ssl.SSLContext] = None) -> None:
         super().__init__()
+        self.ssl_context = ssl_context
 
     def get_authorization_header(self, topic: Optional[str]) -> Optional[str]:
         return None
+
+
+# Credentials subclass for certificate authentication
+class CertificateCredentials(Credentials):
+    def __init__(self, cert_file: Optional[str] = None, password: Optional[str] = None) -> None:
+        ssl_context = ssl.create_default_context()
+        ssl_context.load_cert_chain(cert_file, password=password)
+        super(CertificateCredentials, self).__init__(ssl_context)
 
 
 # Credentials subclass for JWT token based authentication

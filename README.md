@@ -15,6 +15,8 @@ Either download the source from GitHub or use pip:
 ## Sample usage
 
 ```python
+import collections
+
 from apns2.client import APNsClient
 from apns2.payload import Payload
 

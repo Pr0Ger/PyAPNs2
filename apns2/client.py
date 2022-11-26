@@ -26,6 +26,7 @@ class NotificationType(Enum):
     VoIP = 'voip'
     Complication = 'complication'
     FileProvider = 'fileprovider'
+    LiveActivity = 'liveactivity'
     MDM = 'mdm'
 
 
@@ -117,6 +118,8 @@ class APNsClient(object):
                 inferred_push_type = NotificationType.Complication.value
             elif topic.endswith('.pushkit.fileprovider'):
                 inferred_push_type = NotificationType.FileProvider.value
+            elif topic.endswith('.push-type.liveactivity'):
+                inferred_push_type = NotificationType.LiveActivity.value
             elif any([
                 notification.alert is not None,
                 notification.badge is not None,

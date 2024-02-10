@@ -19,13 +19,14 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Software Development :: Libraries"
 ]
 
 [tool.poetry.dependencies]
 python = ">=3.7"
 cryptography = ">=1.7.2"
-hyper = ">=0.7"
+httpx = {version = ">=0.13.0", extras = ["http2"] }
 pyjwt = ">=2.0.0"
 
 [tool.poetry.dev-dependencies]
@@ -49,7 +50,7 @@ disable = "missing-docstring, too-few-public-methods, locally-disabled, invalid-
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py37, py38, py39
+envlist = py37, py38, py39, py310
 isolated_build = True
 
 [testenv]
